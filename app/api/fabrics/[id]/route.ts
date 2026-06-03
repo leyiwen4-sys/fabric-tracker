@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFabricById, updateFabric, deleteFabric } from '@/lib/fabrics'
+import { verifyToken, getCookieName } from '@/lib/auth'
 import { unlink, writeFile, mkdir } from 'fs/promises'
 import path from 'path'
+
+async function getUserId(request: NextRequest): Promise<number | null> {
+  const token = request.cookies.get(getCookieName())?.value
+  if (!token) return null
+  const payload = await verifyToken(token)
+  return payload?.userId || null
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId(request)
+    if (!userId) {
+      return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
+    }
+
     const { id: idStr } = await params
     const id = parseInt(idStr)
     if (isNaN(id)) {
@@ -16,7 +29,7 @@ export async function GET(
         { status: 400 }
       )
     }
-    const fabric = getFabricById(id)
+    const fabric = getFabricById(id, userId)
     if (!fabric) {
       return NextResponse.json(
         { success: false, error: '布料不存在' },
@@ -37,6 +50,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId(request)
+    if (!userId) {
+      return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
+    }
+
     const { id: idStr } = await params
     const id = parseInt(idStr)
     if (isNaN(id)) {
@@ -89,7 +107,7 @@ export async function PUT(
       updateData.photo_path = `/uploads/${filename}`
     }
 
-    const updated = updateFabric(id, updateData)
+    const updated = updateFabric(id, userId, updateData)
     if (!updated) {
       return NextResponse.json(
         { success: false, error: '布料不存在' },
@@ -110,6 +128,11 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId(request)
+    if (!userId) {
+      return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
+    }
+
     const { id: idStr } = await params
     const id = parseInt(idStr)
     if (isNaN(id)) {
@@ -120,7 +143,7 @@ export async function DELETE(
     }
 
     // Delete associated photo file
-    const fabric = getFabricById(id)
+    const fabric = getFabricById(id, userId)
     if (fabric?.photo_path) {
       const filePath = path.join(process.cwd(), 'public', fabric.photo_path)
       try {
@@ -130,7 +153,7 @@ export async function DELETE(
       }
     }
 
-    const deleted = deleteFabric(id)
+    const deleted = deleteFabric(id, userId)
     if (!deleted) {
       return NextResponse.json(
         { success: false, error: '布料不存在' },

@@ -1,14 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllFabrics, createFabric, FabricInput } from '@/lib/fabrics'
+import { verifyToken, getCookieName } from '@/lib/auth'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 
+async function getUserId(request: NextRequest): Promise<number | null> {
+  const token = request.cookies.get(getCookieName())?.value
+  if (!token) return null
+  const payload = await verifyToken(token)
+  return payload?.userId || null
+}
+
 export async function GET(request: NextRequest) {
   try {
+    const userId = await getUserId(request)
+    if (!userId) {
+      return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || undefined
     const sort = searchParams.get('sort') || 'created_at_desc'
-    const fabrics = getAllFabrics(type, sort)
+    const fabrics = getAllFabrics(userId, type, sort)
     return NextResponse.json({ success: true, data: fabrics })
   } catch (error) {
     return NextResponse.json(
@@ -20,6 +33,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getUserId(request)
+    if (!userId) {
+      return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
+    }
+
     const formData = await request.formData()
 
     const name = formData.get('name') as string
@@ -65,6 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     const fabricData: FabricInput = {
+      user_id: userId,
       name,
       type,
       width: formData.get('width') ? parseFloat(formData.get('width') as string) : null,
