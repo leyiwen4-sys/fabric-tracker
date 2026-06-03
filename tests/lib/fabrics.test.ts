@@ -33,6 +33,8 @@ describe('Database initialization', () => {
     expect(columnNames).toContain('store')
     expect(columnNames).toContain('purchase_date')
     expect(columnNames).toContain('photo_path')
+    expect(columnNames).toContain('photos')
+    expect(columnNames).toContain('status')
     expect(columnNames).toContain('notes')
     expect(columnNames).toContain('created_at')
     expect(columnNames).toContain('updated_at')
@@ -68,6 +70,8 @@ describe('Fabrics CRUD', () => {
     price: 28,
     store: '晓港布料市场 2F-38',
     purchase_date: '2026-05-15',
+    photos: '[]',
+    status: 'idle',
     notes: '适合做春夏连衣裙',
   }
 
@@ -85,6 +89,12 @@ describe('Fabrics CRUD', () => {
     const list = getAllFabrics(TEST_USER_ID)
     expect(list.length).toBeGreaterThanOrEqual(2)
     expect(list[0].name).toBe('水洗牛仔蓝') // latest first
+  })
+
+  it('getAllFabrics should support search', () => {
+    createFabric({ ...sampleFabric, name: '独一无二测试名' })
+    const list = getAllFabrics(1, { search: '独一无二' })
+    expect(list.length).toBe(1)
   })
 
   it('getFabricById should return the correct fabric', () => {

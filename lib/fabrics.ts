@@ -11,6 +11,8 @@ export interface Fabric {
   store: string | null
   purchase_date: string | null
   photo_path: string | null
+  photos: string
+  status: string
   notes: string | null
   created_at: string
   updated_at: string
@@ -18,14 +20,22 @@ export interface Fabric {
 
 export type FabricInput = Omit<Fabric, 'id' | 'created_at' | 'updated_at'>
 
-export function getAllFabrics(userId: number, type?: string, sort: string = 'created_at_desc'): Fabric[] {
+export function getAllFabrics(
+  userId: number,
+  options?: { type?: string; search?: string; sort?: string }
+): Fabric[] {
   const db = getDb()
   let sql = 'SELECT * FROM fabrics WHERE user_id = ?'
   const params: any[] = [userId]
 
-  if (type) {
+  if (options?.type) {
     sql += ' AND type = ?'
-    params.push(type)
+    params.push(options.type)
+  }
+  if (options?.search) {
+    const q = `%${options.search}%`
+    sql += ' AND (name LIKE ? OR store LIKE ? OR notes LIKE ?)'
+    params.push(q, q, q)
   }
 
   sql += ' ORDER BY created_at DESC, id DESC'
@@ -46,12 +56,14 @@ export function createFabric(data: FabricInput): Fabric {
     store: null,
     purchase_date: null,
     photo_path: null,
+    photos: '[]',
+    status: 'idle',
     notes: null,
   }
   const row = { ...defaults, ...data }
   const stmt = db.prepare(`
-    INSERT INTO fabrics (user_id, name, type, width, unit, price, store, purchase_date, photo_path, notes)
-    VALUES (@user_id, @name, @type, @width, @unit, @price, @store, @purchase_date, @photo_path, @notes)
+    INSERT INTO fabrics (user_id, name, type, width, unit, price, store, purchase_date, photo_path, photos, status, notes)
+    VALUES (@user_id, @name, @type, @width, @unit, @price, @store, @purchase_date, @photo_path, @photos, @status, @notes)
   `)
   const result = stmt.run(row)
   return getFabricById(result.lastInsertRowid as number, data.user_id)!
@@ -68,7 +80,8 @@ export function updateFabric(id: number, userId: number, data: Partial<FabricInp
     UPDATE fabrics SET
       name = @name, type = @type, width = @width, unit = @unit,
       price = @price, store = @store, purchase_date = @purchase_date,
-      photo_path = @photo_path, notes = @notes, updated_at = @updated_at
+      photo_path = @photo_path, photos = @photos, status = @status,
+      notes = @notes, updated_at = @updated_at
     WHERE id = @id AND user_id = @user_id
   `).run(merged)
 

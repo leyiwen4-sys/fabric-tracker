@@ -20,8 +20,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || undefined
+    const search = searchParams.get('search') || undefined
     const sort = searchParams.get('sort') || 'created_at_desc'
-    const fabrics = getAllFabrics(userId, type, sort)
+    const fabrics = getAllFabrics(userId, { type, search, sort })
     return NextResponse.json({ success: true, data: fabrics })
   } catch (error) {
     return NextResponse.json(
@@ -92,6 +93,8 @@ export async function POST(request: NextRequest) {
       store: (formData.get('store') as string) || null,
       purchase_date: (formData.get('purchase_date') as string) || null,
       photo_path: photoPath,
+      photos: (formData.get('photos') as string) || undefined,
+      status: (formData.get('status') as string) || undefined,
       notes: (formData.get('notes') as string) || null,
     }
 
