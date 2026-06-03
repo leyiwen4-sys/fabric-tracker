@@ -3,18 +3,25 @@ import { verifyToken, getCookieName } from '@/lib/auth'
 import { getAllFabrics } from '@/lib/fabrics'
 import FabricCard from '@/components/FabricCard'
 import LogoutButton from '@/components/LogoutButton'
+import SearchBar from '@/components/SearchBar'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string }>
+}) {
   const cookieStore = await cookies()
   const token = cookieStore.get(getCookieName())?.value
   const payload = token ? await verifyToken(token) : null
   const userId = payload?.userId || 0
   const userEmail = payload?.email || ''
 
-  const fabrics = userId ? getAllFabrics(userId) : []
+  const { search } = await searchParams
+  const fabrics = userId ? getAllFabrics(userId, { search }) : []
 
   return (
     <div>
@@ -44,9 +51,22 @@ export default async function HomePage() {
           >
             {fabrics.length}
           </span>
+          <Link href="/stats" style={{
+            background: 'var(--color-primary-light)',
+            padding: '4px 8px',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontWeight: 600,
+          }}>
+            📊
+          </Link>
         </div>
         <LogoutButton email={userEmail} />
       </header>
+
+      <Suspense fallback={null}>
+        <SearchBar />
+      </Suspense>
 
       <main style={{ padding: '8px 12px' }}>
         {fabrics.length === 0 ? (
