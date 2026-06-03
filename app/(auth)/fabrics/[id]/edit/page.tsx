@@ -6,8 +6,9 @@ import FabricForm from '@/components/FabricForm'
 
 export const dynamic = 'force-dynamic'
 
-export default async function EditFabricPage({ params }: { params: { id: string } }) {
-  const id = parseInt(params.id)
+export default async function EditFabricPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: idStr } = await params
+  const id = parseInt(idStr)
   if (isNaN(id)) notFound()
 
   const cookieStore = await cookies()

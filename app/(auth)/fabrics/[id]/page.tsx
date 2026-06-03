@@ -6,8 +6,9 @@ import FabricDetail from '@/components/FabricDetail'
 
 export const dynamic = 'force-dynamic'
 
-export default async function FabricDetailPage({ params }: { params: { id: string } }) {
-  const id = parseInt(params.id)
+export default async function FabricDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: idStr } = await params
+  const id = parseInt(idStr)
   if (isNaN(id)) notFound()
 
   const cookieStore = await cookies()
