@@ -1,0 +1,87 @@
+<h2>布料相册 - 页面布局方案</h2>
+<p class="subtitle">三种核心页面：相册首页 → 布料详情 → 添加/编辑</p>
+
+<div class="section">
+  <h3>页面 1：相册首页（网格浏览）</h3>
+  <div class="mockup">
+    <div class="mockup-header">🧵 我的布料收藏</div>
+    <div class="mockup-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-weight:600;">共 12 块布料</div>
+        <button class="mock-button" style="padding:6px 16px;">+ 添加布料</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div class="placeholder" style="aspect-ratio:3/4;display:flex;flex-direction:column;overflow:hidden;padding:0;border-radius:8px;">
+          <div style="height:60%;background:#e8d5c4;display:flex;align-items:center;justify-content:center;color:#8b7355;">🧶</div>
+          <div style="padding:8px;font-size:13px;font-weight:600;">碎花亚麻</div>
+          <div style="padding:0 8px;font-size:11px;color:#888;">棉麻 · 145cm · ¥28/米</div>
+        </div>
+        <div class="placeholder" style="aspect-ratio:3/4;display:flex;flex-direction:column;overflow:hidden;padding:0;border-radius:8px;">
+          <div style="height:60%;background:#b8c5d0;display:flex;align-items:center;justify-content:center;color:#5a7a8a;">🧵</div>
+          <div style="padding:8px;font-size:13px;font-weight:600;">水洗牛仔蓝</div>
+          <div style="padding:0 8px;font-size:11px;color:#888;">棉 · 150cm · ¥35/码</div>
+        </div>
+        <div class="placeholder" style="aspect-ratio:3/4;display:flex;flex-direction:column;overflow:hidden;padding:0;border-radius:8px;">
+          <div style="height:60%;background:#c4b8c4;display:flex;align-items:center;justify-content:center;color:#7a6a7a;">🪡</div>
+          <div style="padding:8px;font-size:13px;font-weight:600;">真丝素绉缎</div>
+          <div style="padding:0 8px;font-size:11px;color:#888;">丝 · 114cm · ¥78/米</div>
+        </div>
+        <div class="placeholder" style="aspect-ratio:3/4;display:flex;flex-direction:column;overflow:hidden;padding:0;border-radius:8px;">
+          <div style="height:60%;background:#d4c4a8;display:flex;align-items:center;justify-content:center;color:#8a7a5a;">🧣</div>
+          <div style="padding:8px;font-size:13px;font-weight:600;">羊毛格纹</div>
+          <div style="padding:0 8px;font-size:11px;color:#888;">毛 · 150cm · ¥120/米</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>页面 2：布料详情</h3>
+  <div class="mockup">
+    <div class="mockup-header">← 返回  |  碎花亚麻</div>
+    <div class="mockup-body">
+      <div style="display:flex;gap:20px;">
+        <div class="placeholder" style="flex:1;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:#e8d5c4;">🧶 照片</div>
+        <div style="flex:1;">
+          <table style="width:100%;font-size:14px;border-collapse:collapse;">
+            <tr><td style="padding:8px 4px;color:#888;">类型</td><td style="padding:8px 4px;">棉麻混纺</td></tr>
+            <tr><td style="padding:8px 4px;color:#888;">幅宽</td><td style="padding:8px 4px;">145 cm</td></tr>
+            <tr><td style="padding:8px 4px;color:#888;">单价</td><td style="padding:8px 4px;">¥28 / 米</td></tr>
+            <tr><td style="padding:8px 4px;color:#888;">店铺</td><td style="padding:8px 4px;">晓港布料市场 2F-38</td></tr>
+            <tr><td style="padding:8px 4px;color:#888;">购买日期</td><td style="padding:8px 4px;">2026-05-15</td></tr>
+            <tr><td style="padding:8px 4px;color:#888;">备注</td><td style="padding:8px 4px;">适合做春夏连衣裙，手感柔软</td></tr>
+          </table>
+          <div style="margin-top:16px;display:flex;gap:8px;">
+            <button class="mock-button">✏️ 编辑</button>
+            <button class="mock-button" style="background:#e74c3c;">🗑 删除</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>页面 3：添加/编辑布料</h3>
+  <div class="mockup">
+    <div class="mockup-header">+ 添加新布料</div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:600px;">
+        <div><div class="label">布料名称 *</div><input class="mock-input" style="width:100%;" placeholder="例如：碎花亚麻"></div>
+        <div><div class="label">类型 *</div><input class="mock-input" style="width:100%;" placeholder="棉 / 麻 / 丝 / 毛 ..."></div>
+        <div><div class="label">幅宽 (cm)</div><input class="mock-input" style="width:100%;" placeholder="145"></div>
+        <div><div class="label">单位</div><input class="mock-input" style="width:100%;" placeholder="米 / 码"></div>
+        <div><div class="label">单价 (元)</div><input class="mock-input" style="width:100%;" placeholder="28"></div>
+        <div><div class="label">购买店铺</div><input class="mock-input" style="width:100%;" placeholder="晓港布料市场 2F-38"></div>
+        <div><div class="label">购买日期</div><input class="mock-input" style="width:100%;" placeholder="2026-05-15"></div>
+        <div><div class="label">照片</div><input class="mock-input" style="width:100%;" placeholder="点击上传"></div>
+      </div>
+      <div style="margin-top:12px;"><div class="label">备注</div><textarea class="mock-input" style="width:100%;height:60px;" placeholder="手感、适合做什么等..."></textarea></div>
+      <div style="margin-top:16px;">
+        <button class="mock-button" style="padding:8px 24px;">保存</button>
+        <span style="margin-left:12px;color:#888;font-size:13px;">或 取消</span>
+      </div>
+    </div>
+  </div>
+</div>
