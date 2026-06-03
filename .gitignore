@@ -47,6 +47,8 @@ next-env.d.ts
 # sqlite
 *.db
 *.db-journal
+*.db-wal
+*.db-shm
 
 # uploads (keep directory structure)
 public/uploads/*
