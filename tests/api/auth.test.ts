@@ -3,6 +3,8 @@
 import { describe, it, expect, afterAll } from 'vitest'
 import { POST as Register } from '@/app/api/auth/register/route'
 import { POST as Login } from '@/app/api/auth/login/route'
+import { POST as Logout } from '@/app/api/auth/logout/route'
+import { GET as Me } from '@/app/api/auth/me/route'
 import { getDb } from '@/lib/db'
 import { NextRequest } from 'next/server'
 
@@ -90,5 +92,24 @@ describe('POST /api/auth/login', () => {
       })
     )
     expect(res.status).toBe(401)
+  })
+})
+
+describe('GET /api/auth/me', () => {
+  it('should return 401 without cookie', async () => {
+    const res = await Me(
+      new NextRequest('http://localhost/api/auth/me')
+    )
+    expect(res.status).toBe(401)
+  })
+})
+
+describe('POST /api/auth/logout', () => {
+  it('should clear cookie', async () => {
+    const res = await Logout(
+      new NextRequest('http://localhost/api/auth/logout', { method: 'POST' })
+    )
+    const json = await res.json()
+    expect(json.success).toBe(true)
   })
 })
