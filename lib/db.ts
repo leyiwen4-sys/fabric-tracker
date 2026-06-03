@@ -19,7 +19,6 @@ function initSchema(db: Database.Database): void {
   const hasUserId = tableInfo.some((col) => col.name === 'user_id')
 
   if (!hasUserId) {
-    // Drop and recreate with user_id (dev-only approach)
     db.exec('DROP TABLE IF EXISTS fabrics')
   }
 
@@ -42,9 +41,22 @@ function initSchema(db: Database.Database): void {
       store TEXT,
       purchase_date TEXT,
       photo_path TEXT,
+      photos TEXT DEFAULT '[]',
+      status TEXT DEFAULT 'idle',
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `)
+
+  // Add missing columns for older DBs (migration)
+  if (hasUserId) {
+    const colNames = tableInfo.map((c) => c.name)
+    if (!colNames.includes('status')) {
+      db.exec("ALTER TABLE fabrics ADD COLUMN status TEXT DEFAULT 'idle'")
+    }
+    if (!colNames.includes('photos')) {
+      db.exec("ALTER TABLE fabrics ADD COLUMN photos TEXT DEFAULT '[]'")
+    }
+  }
 }
