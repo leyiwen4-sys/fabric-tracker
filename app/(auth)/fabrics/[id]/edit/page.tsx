@@ -1,14 +1,21 @@
+import { cookies } from 'next/headers'
+import { verifyToken, getCookieName } from '@/lib/auth'
 import { getFabricById } from '@/lib/fabrics'
 import { notFound } from 'next/navigation'
 import FabricForm from '@/components/FabricForm'
 
 export const dynamic = 'force-dynamic'
 
-export default function EditFabricPage({ params }: { params: { id: string } }) {
+export default async function EditFabricPage({ params }: { params: { id: string } }) {
   const id = parseInt(params.id)
   if (isNaN(id)) notFound()
 
-  const fabric = getFabricById(id)
+  const cookieStore = await cookies()
+  const token = cookieStore.get(getCookieName())?.value
+  const payload = token ? await verifyToken(token) : null
+  const userId = payload?.userId || 0
+
+  const fabric = userId ? getFabricById(id, userId) : null
   if (!fabric) notFound()
 
   return (
