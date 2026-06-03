@@ -3,6 +3,7 @@
 import { useState, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Fabric } from '@/lib/fabrics'
+import { showToast } from '@/components/Toast'
 import styles from './FabricForm.module.css'
 
 interface Props {
@@ -59,10 +60,12 @@ export default function FabricForm({ fabric }: Props) {
         return
       }
 
+      showToast(isEdit ? '更新成功' : '添加成功', 'success')
       router.push(`/fabrics/${json.data.id}`)
       router.refresh()
     } catch {
       setError('网络错误，请重试')
+      showToast('网络错误，请重试', 'error')
       setSubmitting(false)
     }
   }

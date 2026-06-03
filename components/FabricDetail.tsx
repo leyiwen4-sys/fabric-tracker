@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Fabric } from '@/lib/fabrics'
+import { showToast } from '@/components/Toast'
 import styles from './FabricDetail.module.css'
 
 export default function FabricDetail({ fabric }: { fabric: Fabric }) {
@@ -22,10 +23,10 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
         router.push('/')
         router.refresh()
       } else {
-        alert(json.error || '删除失败')
+        showToast(json.error || '删除失败', 'error')
       }
     } catch {
-      alert('网络错误，请重试')
+      showToast('删除失败，请重试', 'error')
     } finally {
       setDeleting(false)
     }
