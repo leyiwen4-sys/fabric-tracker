@@ -10,16 +10,63 @@ interface Props {
   fabric?: Fabric
 }
 
+const MAX_PHOTOS = 3
+
+type PhotoItem =
+  | { kind: 'existing'; url: string }
+  | { kind: 'new'; file: File; preview: string }
+
+function buildInitialPhotos(fabric?: Fabric): PhotoItem[] {
+  if (fabric?.photos) {
+    try {
+      const urls: string[] = JSON.parse(fabric.photos)
+      if (urls.length > 0) {
+        return urls.map(url => ({ kind: 'existing' as const, url }))
+      }
+    } catch { /* fall through */ }
+  }
+  if (fabric?.photo_path) {
+    return [{ kind: 'existing' as const, url: fabric.photo_path }]
+  }
+  return []
+}
+
 export default function FabricForm({ fabric }: Props) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(
-    fabric?.photo_path || null
-  )
+  const [photoItems, setPhotoItems] = useState<PhotoItem[]>(buildInitialPhotos(fabric))
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const isEdit = !!fabric
+
+  function getPreviewUrl(item: PhotoItem): string {
+    return item.kind === 'existing' ? item.url : item.preview
+  }
+
+  function handlePhotosChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    const remaining = MAX_PHOTOS - photoItems.length
+    if (remaining <= 0) { e.target.value = ''; return }
+
+    const toAdd = Math.min(files.length, remaining)
+    const newItems: PhotoItem[] = []
+    for (let i = 0; i < toAdd; i++) {
+      newItems.push({
+        kind: 'new',
+        file: files[i],
+        preview: URL.createObjectURL(files[i]),
+      })
+    }
+    setPhotoItems(prev => [...prev, ...newItems])
+    e.target.value = ''
+  }
+
+  function removePhoto(index: number) {
+    setPhotoItems(prev => prev.filter((_, i) => i !== index))
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -45,10 +92,19 @@ export default function FabricForm({ fabric }: Props) {
       return
     }
 
+    // Append photo data
+    photoItems.forEach((item, i) => {
+      if (item.kind === 'existing') {
+        formData.append(`existing_${i}`, item.url)
+      } else {
+        formData.append(`photo_${i}`, item.file)
+      }
+    })
+
     setSubmitting(true)
 
     try {
-      const url = isEdit ? `/api/fabrics/${fabric.id}` : '/api/fabrics'
+      const url = isEdit ? `/api/fabrics/${fabric!.id}` : '/api/fabrics'
       const method = isEdit ? 'PUT' : 'POST'
 
       const res = await fetch(url, { method, body: formData })
@@ -70,32 +126,51 @@ export default function FabricForm({ fabric }: Props) {
     }
   }
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) {
-      setPhotoPreview(URL.createObjectURL(file))
-    }
-  }
-
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <div className={styles.photoUpload} onClick={() => fileInputRef.current?.click()}>
-        {photoPreview ? (
-          <img src={photoPreview} alt="预览" className={styles.photoPreview} />
+      <div
+        className={photoItems.length > 0 ? styles.photoUploadFilled : styles.photoUpload}
+        onClick={() => {
+          if (photoItems.length === 0) fileInputRef.current?.click()
+        }}
+      >
+        {photoItems.length > 0 ? (
+          <div className={styles.thumbnailRow}>
+            {photoItems.map((item, i) => (
+              <div key={i} className={styles.thumbnail}>
+                <img
+                  src={getPreviewUrl(item)}
+                  alt=""
+                  className={styles.thumbnailImg}
+                />
+                <span
+                  className={styles.thumbnailRemove}
+                  onClick={(e) => { e.stopPropagation(); removePhoto(i) }}
+                >&times;</span>
+              </div>
+            ))}
+            {photoItems.length < MAX_PHOTOS && (
+              <div
+                className={styles.addBtn}
+                onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click() }}
+              >+</div>
+            )}
+          </div>
         ) : (
           <>
             <div style={{ fontSize: '32px' }}>📷</div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-              点击拍照或选择照片
+            <div className={styles.uploadHint}>
+              点击拍照或选择照片（最多 3 张）
             </div>
           </>
         )}
         <input
           ref={fileInputRef}
           type="file"
-          name="photo"
           accept="image/jpeg,image/png,image/webp"
-          onChange={handlePhotoChange}
+          multiple
+          onChange={handlePhotosChange}
+          className={styles.hiddenFileInput}
         />
       </div>
 

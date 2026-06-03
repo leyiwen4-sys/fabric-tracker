@@ -53,10 +53,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Handle photo upload
-    let photoPath: string | null = null
-    const photo = formData.get('photo') as File | null
-    if (photo && photo.size > 0) {
+    // Handle multiple photo uploads (max 3)
+    const photoPaths: string[] = []
+    for (let i = 0; i < 3; i++) {
+      const photo = formData.get(`photo_${i}`) as File | null
+      if (!photo || photo.size === 0) continue
+
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
       if (!allowedTypes.includes(photo.type)) {
@@ -77,11 +79,14 @@ export async function POST(request: NextRequest) {
       await mkdir(uploadsDir, { recursive: true })
 
       const ext = photo.type.split('/')[1] || 'jpg'
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const filename = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}.${ext}`
       const buffer = Buffer.from(await photo.arrayBuffer())
       await writeFile(path.join(uploadsDir, filename), buffer)
-      photoPath = `/uploads/${filename}`
+      photoPaths.push(`/uploads/${filename}`)
     }
+
+    const photos = photoPaths.length > 0 ? JSON.stringify(photoPaths) : '[]'
+    const firstPhoto = photoPaths.length > 0 ? photoPaths[0] : null
 
     const fabricData: FabricInput = {
       user_id: userId,
@@ -92,8 +97,8 @@ export async function POST(request: NextRequest) {
       price: formData.get('price') ? parseFloat(formData.get('price') as string) : null,
       store: (formData.get('store') as string) || null,
       purchase_date: (formData.get('purchase_date') as string) || null,
-      photo_path: photoPath,
-      photos: (formData.get('photos') as string) || '[]',
+      photo_path: firstPhoto,
+      photos,
       status: (formData.get('status') as string) || 'idle',
       notes: (formData.get('notes') as string) || null,
     }

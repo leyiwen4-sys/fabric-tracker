@@ -11,6 +11,12 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
 
+  const photos: string[] = (() => {
+    try { return JSON.parse(fabric.photos || '[]') }
+    catch { return fabric.photo_path ? [fabric.photo_path] : [] }
+  })()
+  const [activePhoto, setActivePhoto] = useState<string | null>(photos[0] || null)
+
   const statusLabels: Record<string, string> = {
     idle: '🟢 闲置',
     used: '🟡 已用',
@@ -61,12 +67,26 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
   return (
     <>
       <div className={styles.photo}>
-        {fabric.photo_path ? (
-          <img src={fabric.photo_path} alt={fabric.name} />
+        {activePhoto ? (
+          <img src={activePhoto} alt={fabric.name} />
         ) : (
           '🧶'
         )}
       </div>
+
+      {photos.length > 1 && (
+        <div className={styles.thumbnailStrip}>
+          {photos.map((p, i) => (
+            <img
+              key={i}
+              src={p}
+              alt=""
+              onClick={() => setActivePhoto(p)}
+              className={`${styles.stripThumb} ${activePhoto === p ? styles.stripThumbActive : ''}`}
+            />
+          ))}
+        </div>
+      )}
 
       <div className={styles.body}>
         <div className={styles.tags}>

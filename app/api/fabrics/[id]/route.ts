@@ -79,33 +79,42 @@ export async function PUT(
     if (formData.get('price') !== null) {
       updateData.price = parseFloat(formData.get('price') as string)
     }
+    if (formData.get('status') !== null) {
+      updateData.status = formData.get('status') as string
+    }
 
-    // Handle photo update
-    const photo = formData.get('photo') as File | null
-    if (photo && photo.size > 0) {
+    // Handle multi-photo update
+    const finalPhotos: string[] = []
+
+    // First, collect existing URLs passed from frontend
+    for (let i = 0; ; i++) {
+      const url = formData.get(`existing_${i}`)
+      if (!url) break
+      finalPhotos.push(url as string)
+    }
+
+    // Then overlay new uploads at the same positions
+    for (let i = 0; i < 3; i++) {
+      const photo = formData.get(`photo_${i}`) as File | null
+      if (!photo || photo.size === 0) continue
+
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-      if (!allowedTypes.includes(photo.type)) {
-        return NextResponse.json(
-          { success: false, error: '仅支持 jpg/png/webp 格式' },
-          { status: 400 }
-        )
-      }
-      if (photo.size > 10 * 1024 * 1024) {
-        return NextResponse.json(
-          { success: false, error: '照片大小不能超过 10MB' },
-          { status: 400 }
-        )
-      }
+      if (!allowedTypes.includes(photo.type)) continue
+      if (photo.size > 10 * 1024 * 1024) continue
 
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
       await mkdir(uploadsDir, { recursive: true })
 
       const ext = photo.type.split('/')[1] || 'jpg'
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const filename = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}.${ext}`
       const buffer = Buffer.from(await photo.arrayBuffer())
       await writeFile(path.join(uploadsDir, filename), buffer)
-      updateData.photo_path = `/uploads/${filename}`
+      finalPhotos[i] = `/uploads/${filename}`
     }
+
+    const cleanedPhotos = finalPhotos.filter(p => p).slice(0, 3)
+    updateData.photos = JSON.stringify(cleanedPhotos)
+    updateData.photo_path = cleanedPhotos[0] || null
 
     const updated = updateFabric(id, userId, updateData)
     if (!updated) {
@@ -142,12 +151,27 @@ export async function DELETE(
       )
     }
 
-    // Delete associated photo file
+    // Delete associated photo files
     const fabric = getFabricById(id, userId)
+    const photosToDelete: string[] = []
     if (fabric?.photo_path) {
-      const filePath = path.join(process.cwd(), 'public', fabric.photo_path)
+      photosToDelete.push(fabric.photo_path)
+    }
+    if (fabric?.photos) {
       try {
-        await unlink(filePath)
+        const allPhotos: string[] = JSON.parse(fabric.photos)
+        for (const p of allPhotos) {
+          if (!photosToDelete.includes(p)) {
+            photosToDelete.push(p)
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
+    for (const p of photosToDelete) {
+      try {
+        await unlink(path.join(process.cwd(), 'public', p))
       } catch {
         // File may not exist, ignore
       }
