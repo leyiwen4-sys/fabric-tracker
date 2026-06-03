@@ -2,10 +2,20 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { getDb } from '@/lib/db'
 import { createFabric, getFabricById, getAllFabrics, updateFabric, deleteFabric } from '@/lib/fabrics'
 
+const TEST_USER_ID = 1
+
 describe('Database initialization', () => {
+  beforeAll(() => {
+    const db = getDb()
+    db.prepare('INSERT OR IGNORE INTO users (id, email, password_hash) VALUES (?, ?, ?)').run(
+      TEST_USER_ID, 'test@example.com', 'hashed_password'
+    )
+  })
+
   afterAll(() => {
     const db = getDb()
     db.exec('DELETE FROM fabrics')
+    db.exec('DELETE FROM users')
   })
 
   it('should create fabrics table with correct schema', () => {
@@ -14,6 +24,7 @@ describe('Database initialization', () => {
     const columnNames = columns.map((c: any) => c.name)
 
     expect(columnNames).toContain('id')
+    expect(columnNames).toContain('user_id')
     expect(columnNames).toContain('name')
     expect(columnNames).toContain('type')
     expect(columnNames).toContain('width')
@@ -35,12 +46,21 @@ describe('Database initialization', () => {
 })
 
 describe('Fabrics CRUD', () => {
+  beforeAll(() => {
+    const db = getDb()
+    db.prepare('INSERT OR IGNORE INTO users (id, email, password_hash) VALUES (?, ?, ?)').run(
+      TEST_USER_ID, 'test@example.com', 'hashed_password'
+    )
+  })
+
   afterAll(() => {
     const db = getDb()
     db.exec('DELETE FROM fabrics')
+    db.exec('DELETE FROM users')
   })
 
   const sampleFabric = {
+    user_id: TEST_USER_ID,
     name: '碎花亚麻',
     type: '棉麻混纺',
     width: 145,
@@ -62,26 +82,26 @@ describe('Fabrics CRUD', () => {
 
   it('getAllFabrics should return all fabrics', () => {
     createFabric({ ...sampleFabric, name: '水洗牛仔蓝' })
-    const list = getAllFabrics()
+    const list = getAllFabrics(TEST_USER_ID)
     expect(list.length).toBeGreaterThanOrEqual(2)
     expect(list[0].name).toBe('水洗牛仔蓝') // latest first
   })
 
   it('getFabricById should return the correct fabric', () => {
     const created = createFabric({ ...sampleFabric, name: '真丝素绉缎' })
-    const found = getFabricById(created.id)
+    const found = getFabricById(created.id, TEST_USER_ID)
     expect(found).not.toBeNull()
     expect(found!.name).toBe('真丝素绉缎')
   })
 
   it('getFabricById should return null for nonexistent id', () => {
-    const found = getFabricById(99999)
+    const found = getFabricById(99999, TEST_USER_ID)
     expect(found).toBeNull()
   })
 
   it('updateFabric should modify and return updated fabric', () => {
     const created = createFabric({ ...sampleFabric, name: '羊毛格纹' })
-    const updated = updateFabric(created.id, { name: '羊毛格纹（加厚）', price: 130 })
+    const updated = updateFabric(created.id, TEST_USER_ID, { name: '羊毛格纹（加厚）', price: 130 })
     expect(updated).not.toBeNull()
     expect(updated!.name).toBe('羊毛格纹（加厚）')
     expect(updated!.price).toBe(130)
@@ -90,8 +110,8 @@ describe('Fabrics CRUD', () => {
 
   it('deleteFabric should remove the fabric', () => {
     const created = createFabric({ ...sampleFabric, name: '待删除布料' })
-    const result = deleteFabric(created.id)
+    const result = deleteFabric(created.id, TEST_USER_ID)
     expect(result).toBe(true)
-    expect(getFabricById(created.id)).toBeNull()
+    expect(getFabricById(created.id, TEST_USER_ID)).toBeNull()
   })
 })

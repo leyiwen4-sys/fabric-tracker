@@ -2,6 +2,7 @@ import { getDb } from './db'
 
 export interface Fabric {
   id: number
+  user_id: number
   name: string
   type: string
   width: number | null
@@ -17,13 +18,13 @@ export interface Fabric {
 
 export type FabricInput = Omit<Fabric, 'id' | 'created_at' | 'updated_at'>
 
-export function getAllFabrics(type?: string, sort: string = 'created_at_desc'): Fabric[] {
+export function getAllFabrics(userId: number, type?: string, sort: string = 'created_at_desc'): Fabric[] {
   const db = getDb()
-  let sql = 'SELECT * FROM fabrics'
-  const params: any[] = []
+  let sql = 'SELECT * FROM fabrics WHERE user_id = ?'
+  const params: any[] = [userId]
 
   if (type) {
-    sql += ' WHERE type = ?'
+    sql += ' AND type = ?'
     params.push(type)
   }
 
@@ -31,9 +32,9 @@ export function getAllFabrics(type?: string, sort: string = 'created_at_desc'): 
   return db.prepare(sql).all(...params) as Fabric[]
 }
 
-export function getFabricById(id: number): Fabric | null {
+export function getFabricById(id: number, userId: number): Fabric | null {
   const db = getDb()
-  const result = db.prepare('SELECT * FROM fabrics WHERE id = ?').get(id)
+  const result = db.prepare('SELECT * FROM fabrics WHERE id = ? AND user_id = ?').get(id, userId)
   return (result as Fabric) || null
 }
 
@@ -49,15 +50,15 @@ export function createFabric(data: FabricInput): Fabric {
   }
   const row = { ...defaults, ...data }
   const stmt = db.prepare(`
-    INSERT INTO fabrics (name, type, width, unit, price, store, purchase_date, photo_path, notes)
-    VALUES (@name, @type, @width, @unit, @price, @store, @purchase_date, @photo_path, @notes)
+    INSERT INTO fabrics (user_id, name, type, width, unit, price, store, purchase_date, photo_path, notes)
+    VALUES (@user_id, @name, @type, @width, @unit, @price, @store, @purchase_date, @photo_path, @notes)
   `)
   const result = stmt.run(row)
-  return getFabricById(result.lastInsertRowid as number)!
+  return getFabricById(result.lastInsertRowid as number, data.user_id)!
 }
 
-export function updateFabric(id: number, data: Partial<FabricInput>): Fabric | null {
-  const existing = getFabricById(id)
+export function updateFabric(id: number, userId: number, data: Partial<FabricInput>): Fabric | null {
+  const existing = getFabricById(id, userId)
   if (!existing) return null
 
   const db = getDb()
@@ -68,14 +69,14 @@ export function updateFabric(id: number, data: Partial<FabricInput>): Fabric | n
       name = @name, type = @type, width = @width, unit = @unit,
       price = @price, store = @store, purchase_date = @purchase_date,
       photo_path = @photo_path, notes = @notes, updated_at = @updated_at
-    WHERE id = @id
+    WHERE id = @id AND user_id = @user_id
   `).run(merged)
 
-  return getFabricById(id)
+  return getFabricById(id, userId)
 }
 
-export function deleteFabric(id: number): boolean {
+export function deleteFabric(id: number, userId: number): boolean {
   const db = getDb()
-  const result = db.prepare('DELETE FROM fabrics WHERE id = ?').run(id)
+  const result = db.prepare('DELETE FROM fabrics WHERE id = ? AND user_id = ?').run(id, userId)
   return result.changes > 0
 }
