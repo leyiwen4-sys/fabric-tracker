@@ -11,6 +11,32 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
 
+  const statusLabels: Record<string, string> = {
+    idle: '🟢 闲置',
+    used: '🟡 已用',
+    empty: '⚪ 已用完',
+  }
+
+  async function toggleStatus() {
+    const statuses = ['idle', 'used', 'empty']
+    const currentIndex = statuses.indexOf(fabric.status || 'idle')
+    const nextStatus = statuses[(currentIndex + 1) % 3]
+
+    try {
+      const fd = new FormData()
+      fd.append('status', nextStatus)
+      const res = await fetch(`/api/fabrics/${fabric.id}`, { method: 'PUT', body: fd })
+      const json = await res.json()
+      if (json.success) {
+        window.location.reload()
+      } else {
+        showToast(json.error || '更新失败', 'error')
+      }
+    } catch {
+      showToast('状态更新失败', 'error')
+    }
+  }
+
   async function handleDelete() {
     const confirmed = window.confirm('确定要删除这块布料吗？此操作不可撤销。')
     if (!confirmed) return
@@ -44,6 +70,9 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
 
       <div className={styles.body}>
         <div className={styles.tags}>
+          <span className={styles.tag} onClick={toggleStatus} style={{ cursor: 'pointer' }}>
+            {statusLabels[fabric.status || 'idle']}
+          </span>
           <span className={styles.tag}>{fabric.type}</span>
           {fabric.width && <span className={styles.tag}>{fabric.width}cm</span>}
           {fabric.price && (

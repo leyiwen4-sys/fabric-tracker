@@ -1,5 +1,6 @@
 .card {
   display: block;
+  position: relative;
   background: var(--color-white);
   border-radius: var(--radius-card);
   overflow: hidden;
@@ -12,6 +13,7 @@
 }
 
 .photo {
+  position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
   object-fit: cover;
@@ -44,4 +46,13 @@
   font-size: 11px;
   color: var(--color-text-secondary);
   margin-top: 2px;
+}
+
+.statusDot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }

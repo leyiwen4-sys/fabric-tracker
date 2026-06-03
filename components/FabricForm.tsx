@@ -138,6 +138,19 @@ export default function FabricForm({ fabric }: Props) {
         </div>
 
         <div className={styles.field}>
+          <label className={styles.label}>使用状态</label>
+          <select
+            className={styles.input}
+            name="status"
+            defaultValue={fabric?.status || 'idle'}
+          >
+            <option value="idle">🟢 闲置</option>
+            <option value="used">🟡 已用</option>
+            <option value="empty">⚪ 已用完</option>
+          </select>
+        </div>
+
+        <div className={styles.field}>
           <label className={styles.label}>备注</label>
           <textarea className={styles.textarea} name="notes" placeholder="手感、适合做什么等..." defaultValue={fabric?.notes || ''} />
         </div>
