@@ -64,3 +64,33 @@ describe('POST /api/fabrics', () => {
 function createRequest(url: string, options?: RequestInit): NextRequest {
   return new NextRequest(new URL(url), options)
 }
+
+import { GET as GET_ONE, PUT, DELETE } from '@/app/api/fabrics/[id]/route'
+
+describe('GET /api/fabrics/[id]', () => {
+  it('should return 400 for invalid id', async () => {
+    const res = await GET_ONE(
+      new NextRequest(new URL('http://localhost/api/fabrics/abc')),
+      { params: { id: 'abc' } }
+    )
+    expect(res.status).toBe(400)
+  })
+
+  it('should return 404 for nonexistent id', async () => {
+    const res = await GET_ONE(
+      new NextRequest(new URL('http://localhost/api/fabrics/99999')),
+      { params: { id: '99999' } }
+    )
+    expect(res.status).toBe(404)
+  })
+})
+
+describe('DELETE /api/fabrics/[id]', () => {
+  it('should return 400 for invalid id', async () => {
+    const res = await DELETE(
+      new NextRequest(new URL('http://localhost/api/fabrics/abc')),
+      { params: { id: 'abc' } }
+    )
+    expect(res.status).toBe(400)
+  })
+})
