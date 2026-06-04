@@ -21,6 +21,8 @@ vi.mock('next/link', () => ({
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
+const TYPEWRITER_TEXT = '哈喽！欢迎你和你的漂亮布来到布记岛！'
+
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
@@ -33,7 +35,7 @@ describe('LoginPage', () => {
     vi.useRealTimers()
   })
 
-  it('渲染 Logo', async () => {
+  it('渲染 Logo', () => {
     render(<LoginPage />)
     const logo = screen.getByAltText('布记岛')
     expect(logo).toBeInTheDocument()
@@ -59,7 +61,7 @@ describe('LoginPage', () => {
     act(() => { vi.advanceTimersByTime(400) })
 
     // 等待打字完成 (100ms/字 × 20字 + 缓冲)
-    act(() => { vi.advanceTimersByTime(2500) })
+    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
 
     await waitFor(() => {
       expect(screen.getByText('哈喽！欢迎你和你的漂亮布来到布记岛！')).toBeInTheDocument()
@@ -70,7 +72,7 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     // 快进到按钮阶段
     act(() => { vi.advanceTimersByTime(400) })  // logo
-    act(() => { vi.advanceTimersByTime(2500) }) // typing + delay
+    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) }) // typing + delay
 
     expect(screen.getByText('立即登岛')).toBeInTheDocument()
     expect(screen.getByText('获取上岛身份')).toBeInTheDocument()
@@ -80,14 +82,14 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     // 快进到按钮阶段
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(2500) })
+    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
 
     const loginBtn = screen.getByText('立即登岛')
     await userEvent.click(loginBtn)
 
     // 表单应该出现
-    expect(screen.getByPlaceholderText('邮箱')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/密码/)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('your@email.com')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('至少 6 位')).toBeInTheDocument()
     expect(screen.getByText('确认登岛')).toBeInTheDocument()
   })
 
@@ -95,7 +97,7 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     // 快进到按钮阶段
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(2500) })
+    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
 
     const registerLink = screen.getByText('获取上岛身份').closest('a')
     expect(registerLink).toHaveAttribute('href', '/register')
@@ -109,12 +111,12 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     // 快进到按钮阶段并点击展开
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(2500) })
+    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
     await userEvent.click(screen.getByText('立即登岛'))
 
     // 填写表单
-    await userEvent.type(screen.getByPlaceholderText('邮箱'), 'test@test.com')
-    await userEvent.type(screen.getByPlaceholderText(/密码/), 'password')
+    await userEvent.type(screen.getByPlaceholderText('your@email.com'), 'test@test.com')
+    await userEvent.type(screen.getByPlaceholderText('至少 6 位'), 'password')
 
     // 提交
     await userEvent.click(screen.getByText('确认登岛'))
@@ -135,11 +137,11 @@ describe('LoginPage', () => {
 
     render(<LoginPage />)
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(2500) })
+    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
     await userEvent.click(screen.getByText('立即登岛'))
 
-    await userEvent.type(screen.getByPlaceholderText('邮箱'), 'test@test.com')
-    await userEvent.type(screen.getByPlaceholderText(/密码/), 'password')
+    await userEvent.type(screen.getByPlaceholderText('your@email.com'), 'test@test.com')
+    await userEvent.type(screen.getByPlaceholderText('至少 6 位'), 'password')
     await userEvent.click(screen.getByText('确认登岛'))
 
     await waitFor(() => {
@@ -155,11 +157,11 @@ describe('LoginPage', () => {
 
     render(<LoginPage />)
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(2500) })
+    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
     await userEvent.click(screen.getByText('立即登岛'))
 
-    await userEvent.type(screen.getByPlaceholderText('邮箱'), 'test@test.com')
-    await userEvent.type(screen.getByPlaceholderText(/密码/), 'wrong')
+    await userEvent.type(screen.getByPlaceholderText('your@email.com'), 'test@test.com')
+    await userEvent.type(screen.getByPlaceholderText('至少 6 位'), 'wrong')
     await userEvent.click(screen.getByText('确认登岛'))
 
     await waitFor(() => {

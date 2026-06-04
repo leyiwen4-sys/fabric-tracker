@@ -78,6 +78,10 @@
   padding: 0 8px;
 }
 
+.btnPrimary, .btnSecondary {
+  pointer-events: none;
+}
+
 .btnPrimary {
   padding: 13px;
   background: #d4a574;
@@ -93,6 +97,10 @@
   transform: translateY(20px);
   transition: all 0.5s ease;
 }
+.btnPrimaryVisible, .btnSecondaryVisible {
+  pointer-events: auto;
+}
+
 .btnPrimaryVisible {
   opacity: 1;
   transform: translateY(0);

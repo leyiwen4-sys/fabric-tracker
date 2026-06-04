@@ -125,18 +125,21 @@ export default function LoginPage() {
       {/* 登录表单 - 展开 */}
       <div className={`${styles.formWrapper} ${phase === 'form' ? styles.formExpanded : ''}`}>
         <form className={styles.form} onSubmit={handleSubmit}>
+          <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '4px' }}>邮箱</label>
           <input
             className={styles.input}
             type="email"
-            placeholder="邮箱"
+            placeholder="your@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+
+          <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '4px', marginTop: '4px' }}>密码</label>
           <input
             className={styles.input}
             type="password"
-            placeholder="密码（至少 6 位）"
+            placeholder="至少 6 位"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

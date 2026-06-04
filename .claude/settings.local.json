@@ -41,7 +41,10 @@
       "Bash(Get-Content *)",
       "PowerShell(if \\(-not \\(Test-Path \"D:\\\\CODING\\\\Project\\\\test1\\\\app\\\\login\"\\)\\) { New-Item -ItemType Directory -Force -Path \"D:\\\\CODING\\\\Project\\\\test1\\\\app\\\\login\" } else { Write-Output \"Directory already exists\" })",
       "Bash(Start-Sleep *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(Test-Path \"D:\\\\CODING\\\\Project\\\\test1\\\\public\\\\bg-landing.svg\")",
+      "Bash(Test-Path \"D:\\\\CODING\\\\Project\\\\test1\\\\public\\\\logo-landing.svg\")",
+      "Bash(node *)"
     ]
   }
 }
