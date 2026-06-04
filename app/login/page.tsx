@@ -13,7 +13,6 @@ export default function LoginPage() {
   const router = useRouter()
   const [phase, setPhase] = useState<Phase>('logo')
   const [typedText, setTypedText] = useState('')
-  const [showForm, setShowForm] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -30,22 +29,24 @@ export default function LoginPage() {
     if (phase !== 'typing') return
 
     let i = 0
+    let doneTimer: ReturnType<typeof setTimeout>
     const interval = setInterval(() => {
       i++
       setTypedText(TYPEWRITER_TEXT.slice(0, i))
       if (i >= TYPEWRITER_TEXT.length) {
         clearInterval(interval)
-        // 打字完成后进入按钮阶段
-        setTimeout(() => setPhase('buttons'), 300)
+        doneTimer = setTimeout(() => setPhase('buttons'), 300)
       }
     }, 100)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      clearTimeout(doneTimer)
+    }
   }, [phase])
 
   // "立即登岛" 点击 → 展开表单
   function handleStartLogin() {
-    setShowForm(true)
     setPhase('form')
   }
 
@@ -122,7 +123,7 @@ export default function LoginPage() {
       </div>
 
       {/* 登录表单 - 展开 */}
-      <div className={`${styles.formWrapper} ${showForm ? styles.formExpanded : ''}`}>
+      <div className={`${styles.formWrapper} ${phase === 'form' ? styles.formExpanded : ''}`}>
         <form className={styles.form} onSubmit={handleSubmit}>
           <input
             className={styles.input}
