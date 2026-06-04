@@ -1,0 +1,200 @@
+/* 页面容器 - 相对定位以支持底部背景装饰 */
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 60px 20px 0;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Logo 渐显 */
+.logo {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.logoVisible {
+  opacity: 1;
+}
+
+/* 打字机文字区域 */
+.typingArea {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.typingText {
+  font-family: 'ZhaohuaTypeWriter', monospace;
+  font-size: 15px;
+  color: #6b5a4e;
+  white-space: nowrap;
+}
+
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 16px;
+  background: #d4a574;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 0.6s steps(1) infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 副标题 */
+.subtitle {
+  font-size: 11px;
+  color: #b8a088;
+  letter-spacing: 2px;
+  margin-bottom: 28px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+}
+.subtitleVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 按钮区域 */
+.buttons {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 8px;
+}
+
+.btnPrimary {
+  padding: 13px;
+  background: #d4a574;
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+}
+.btnPrimaryVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.btnSecondary {
+  padding: 13px;
+  background: #fff;
+  color: #d4a574;
+  border: 1.5px solid #d4a574;
+  border-radius: 25px;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease;
+}
+.btnSecondaryVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 登录表单展开 */
+.formWrapper {
+  width: 100%;
+  max-width: 300px;
+  padding: 0 8px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  margin-top: 0;
+}
+.formExpanded {
+  max-height: 260px;
+  margin-top: 16px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input:focus {
+  border-color: #d4a574;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 13px;
+  background: #d4a574;
+  color: #fff;
+  border: none;
+  border-radius: 25px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #e74c3c;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* 底部背景装饰 */
+.bgDecoration {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  overflow: hidden;
+  opacity: 0.6;
+  z-index: -1;
+}
+.bgDecoration img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: bottom;
+}
+.bgGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, var(--color-bg, #fafaf8) 0%, transparent 100%);
+}
