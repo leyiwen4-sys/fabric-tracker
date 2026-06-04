@@ -107,17 +107,15 @@ export default function LoginPage() {
       {/* 按钮区域 */}
       <div className={styles.buttons}>
         <button
-          className={`${styles.btnPrimary} ${phase === 'buttons' || phase === 'form' ? styles.btnPrimaryVisible : ''}`}
+          className={`${styles.btnPrimary} ${phase === 'buttons' ? styles.btnPrimaryVisible : ''}`}
           onClick={handleStartLogin}
-          style={phase === 'form' ? { display: 'none' } : undefined}
         >
           立即登岛
         </button>
 
         <Link
           href="/register"
-          className={`${styles.btnSecondary} ${phase === 'buttons' || phase === 'form' ? styles.btnSecondaryVisible : ''}`}
-          style={phase === 'form' ? { display: 'none' } : undefined}
+          className={`${styles.btnSecondary} ${phase === 'buttons' ? styles.btnSecondaryVisible : ''}`}
         >
           获取上岛身份
         </Link>
