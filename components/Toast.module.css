@@ -1,25 +1,32 @@
+/* Hallmark · component: toast · genre: playful · theme: custom (tuned)
+ * states: enter · visible · exit
+ * -------------------------------------------------- */
+
 .overlay {
   position: fixed;
-  top: 16px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000;
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* === Toast — 圆润可爱 ✦ === */
 .toast {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 11px 22px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
   color: #fff;
   white-space: nowrap;
-  animation: slideDown 0.3s ease;
+  box-shadow: 0 4px 16px oklch(20% 0.01 15 / 0.12);
+  animation: slideDown 300ms var(--ease-out);
 }
 
 .success {
-  background: #27ae60;
+  background: var(--color-success);
 }
 
 .error {
@@ -29,7 +36,7 @@
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;

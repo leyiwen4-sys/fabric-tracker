@@ -1,11 +1,13 @@
 import { cookies } from 'next/headers'
 import { verifyToken, getCookieName } from '@/lib/auth'
 import { getAllFabrics } from '@/lib/fabrics'
-import FabricCard from '@/components/FabricCard'
 import LogoutButton from '@/components/LogoutButton'
 import SearchBar from '@/components/SearchBar'
-import Link from 'next/link'
 import { Suspense } from 'react'
+import { Title } from 'animal-island-ui'
+import StatsButton from '@/components/StatsButton'
+import AddFabricButton from '@/components/AddFabricButton'
+import FabricList from '@/components/FabricList'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,108 +20,41 @@ export default async function HomePage({
   const token = cookieStore.get(getCookieName())?.value
   const payload = token ? await verifyToken(token) : null
   const userId = payload?.userId || 0
-  const userEmail = payload?.email || ''
 
   const { search } = await searchParams
-  const fabrics = userId ? getAllFabrics(userId, { search }) : []
+  const fabrics = userId ? await getAllFabrics(userId, { search }) : []
 
   return (
-    <div>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--color-paper)' }}>
+      {/* 顶部 — 统计 · 标题 · 退出 */}
       <header
         style={{
-          padding: '12px 16px',
+          padding: '16px 16px 12px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'var(--color-white)',
-          borderBottom: '1px solid var(--color-border)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
+          flexShrink: 0,
+          background: 'var(--color-paper)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '18px', fontWeight: 700 }}>🧵 我的布料</span>
-          <span
-            style={{
-              background: 'var(--color-primary-light)',
-              padding: '4px 10px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: 600,
-            }}
-          >
-            {fabrics.length}
-          </span>
-          <Link href="/stats" style={{
-            background: 'var(--color-primary-light)',
-            padding: '4px 8px',
-            borderRadius: '12px',
-            fontSize: '12px',
-            fontWeight: 600,
-          }}>
-            📊
-          </Link>
-        </div>
-        <LogoutButton email={userEmail} />
+        <StatsButton />
+
+        <Title size="middle" color="app-pink">我的布记岛</Title>
+
+        <LogoutButton />
       </header>
 
-      <Suspense fallback={null}>
-        <SearchBar />
-      </Suspense>
+      <div style={{ flexShrink: 0 }}>
+        <Suspense fallback={null}>
+          <SearchBar />
+        </Suspense>
+      </div>
 
-      <main style={{ padding: '8px 12px' }}>
-        {fabrics.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '80px 20px',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🧶</div>
-            <p style={{ fontSize: '15px' }}>还没有记录布料</p>
-            <p style={{ fontSize: '13px', marginTop: '4px' }}>
-              点击下方按钮添加第一块布料吧
-            </p>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '10px',
-            }}
-          >
-            {fabrics.map((fabric) => (
-              <FabricCard key={fabric.id} fabric={fabric} />
-            ))}
-          </div>
-        )}
+      <main style={{ flex: 1, overflowY: 'auto', padding: '8px 12px', minHeight: 0 }}>
+        <FabricList fabrics={fabrics} />
       </main>
 
-      <Link
-        href="/fabrics/new"
-        style={{
-          position: 'fixed',
-          right: 'max(16px, calc((100vw - 480px) / 2 + 16px))',
-          bottom: '24px',
-          width: '48px',
-          height: '48px',
-          background: 'var(--color-primary)',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          fontSize: '24px',
-          boxShadow: 'var(--shadow-fab)',
-          zIndex: 100,
-        }}
-        aria-label="添加布料"
-      >
-        +
-      </Link>
+      <AddFabricButton />
     </div>
   )
 }

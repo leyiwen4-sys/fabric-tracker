@@ -2,21 +2,21 @@
 
 import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { Card, Input, Button, Title, Modal, Loading } from 'animal-island-ui'
+import styles from './RegisterPage.module.css'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [showLoading, setShowLoading] = useState(false)
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
-
-    const form = e.currentTarget
-    const email = (form.elements.namedItem('email') as HTMLInputElement).value
-    const password = (form.elements.namedItem('password') as HTMLInputElement).value
-    const confirm = (form.elements.namedItem('confirm') as HTMLInputElement).value
 
     if (!email || !password || !confirm) {
       setError('请填写所有字段')
@@ -46,8 +46,11 @@ export default function RegisterPage() {
         setSubmitting(false)
         return
       }
-      router.push('/login?registered=1')
-      router.refresh()
+      setShowLoading(true)
+      setTimeout(() => {
+        router.push('/login?registered=1')
+        router.refresh()
+      }, 1200)
     } catch {
       setError('网络错误，请重试')
       setSubmitting(false)
@@ -55,98 +58,94 @@ export default function RegisterPage() {
   }
 
   return (
-    <div>
-      <header style={{
-        padding: '12px 16px',
-        background: 'var(--color-white)',
-        borderBottom: '1px solid var(--color-border)',
-        fontSize: '17px',
-        fontWeight: 600,
-      }}>
-        🧵 注册
-      </header>
-
-      <form onSubmit={handleSubmit} style={{ padding: '24px 16px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '4px' }}>邮箱</label>
-          <input
-            name="email"
-            type="email"
-            placeholder="your@email.com"
-            required
-            style={{
-              width: '100%',
-              padding: '10px',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              fontSize: '15px',
-            }}
-          />
+    <>
+      {/* 加载动画 — 仅在 active 时渲染，避免遮挡 */}
+      {showLoading && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+          <Loading active />
         </div>
+      )}
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '4px' }}>密码</label>
-          <input
-            name="password"
-            type="password"
-            placeholder="至少 6 位"
-            required
-            style={{
-              width: '100%',
-              padding: '10px',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              fontSize: '15px',
-            }}
-          />
-        </div>
+      <div className={styles.container}>
+        {/* 顶部：标题 */}
+        <header className={styles.header}>
+          <Title size="middle">获取上岛身份</Title>
+        </header>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--color-text-secondary)', display: 'block', marginBottom: '4px' }}>确认密码</label>
-          <input
-            name="confirm"
-            type="password"
-            placeholder="再次输入密码"
-            required
-            style={{
-              width: '100%',
-              padding: '10px',
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              fontSize: '15px',
-            }}
-          />
-        </div>
+      <div className={styles.formArea}>
+        <Card type="dashed">
+          <form onSubmit={handleSubmit} noValidate className={styles.form}>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>邮箱</label>
+              <Input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                size="large"
+              />
+            </div>
 
-        {error && (
-          <div style={{ color: 'var(--color-danger)', fontSize: '13px', marginBottom: '12px' }}>{error}</div>
-        )}
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>密码</label>
+              <Input
+                type="password"
+                placeholder="至少 6 位"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                size="large"
+              />
+            </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          style={{
-            width: '100%',
-            padding: '14px',
-            background: 'var(--color-primary)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 'var(--radius-button)',
-            fontSize: '16px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          {submitting ? '注册中...' : '注册'}
-        </button>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>确认密码</label>
+              <Input
+                type="password"
+                placeholder="再次输入密码"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                size="large"
+              />
+            </div>
 
-        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-          已有账号？{' '}
-          <Link href="/login" style={{ color: 'var(--color-primary)', fontWeight: 500 }}>
-            去登录
-          </Link>
-        </p>
-      </form>
+            <div>
+              <Button
+                type="primary"
+                htmlType="submit"
+                block
+                loading={submitting}
+              >
+                {submitting ? '注册中...' : '我填好啦！'}
+              </Button>
+            </div>
+
+            <p className={styles.linkText}>
+              已有账号？{' '}
+              <Button type="link" onClick={() => router.push('/login')}>
+                去登录
+              </Button>
+            </p>
+          </form>
+        </Card>
+      </div>
+
+      {/* 加载动画 */}
+      <Loading active={showLoading} />
+
+      {/* 错误弹窗 */}
+      <Modal
+        open={!!error}
+        title="提示"
+        onClose={() => setError(null)}
+        typewriter={false}
+        footer={
+          <Button type="primary" onClick={() => setError(null)}>确定</Button>
+        }
+      >
+        {error}
+      </Modal>
+
     </div>
+    </>
   )
 }

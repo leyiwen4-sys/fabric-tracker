@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken, getCookieName } from '@/lib/auth'
-import { getDb } from '@/lib/db'
+import { getUserIdFromRequest } from '@/lib/auth'
+import { getDb, rowsToObjects } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get(getCookieName())?.value
-    if (!token) {
+    const userId = await getUserIdFromRequest(request)
+    if (!userId) {
       return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
-    }
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.json({ success: false, error: '登录已过期' }, { status: 401 })
     }
 
     const db = getDb()
-    const userId = payload.userId
 
-    const { count } = db.prepare('SELECT COUNT(*) as count FROM fabrics WHERE user_id = ?').get(userId) as any
-    const { total } = db.prepare('SELECT COALESCE(SUM(price), 0) as total FROM fabrics WHERE user_id = ?').get(userId) as any
-    const byType = db.prepare('SELECT type, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY type ORDER BY count DESC').all(userId)
-    const byStatus = db.prepare('SELECT status, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY status').all(userId)
+    const countResult = await db.execute({ sql: 'SELECT COUNT(*) as count FROM fabrics WHERE user_id = ?', args: [userId] })
+    const count = (rowsToObjects<{ count: number }>(countResult.columns, countResult.rows)[0]?.count) || 0
+
+    const totalResult = await db.execute({ sql: 'SELECT COALESCE(SUM(price), 0) as total FROM fabrics WHERE user_id = ?', args: [userId] })
+    const total = (rowsToObjects<{ total: number }>(totalResult.columns, totalResult.rows)[0]?.total) || 0
+
+    const byTypeResult = await db.execute({ sql: 'SELECT type, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY type ORDER BY count DESC', args: [userId] })
+    const byType = rowsToObjects(byTypeResult.columns, byTypeResult.rows)
+
+    const byStatusResult = await db.execute({ sql: 'SELECT status, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY status', args: [userId] })
+    const byStatus = rowsToObjects(byStatusResult.columns, byStatusResult.rows)
 
     return NextResponse.json({
       success: true,

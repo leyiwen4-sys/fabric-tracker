@@ -3,6 +3,68 @@ import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import LoginPage from '@/app/login/page'
 
+// Mock animal-island-ui — its ESM bundle imports PNG files,
+// which causes "Unknown file extension" in vitest's Node context.
+vi.mock('animal-island-ui', () => {
+  // We can't use JSX here because vi.mock factory is hoisted
+  // and runs outside the JSX transform. Use createElement instead.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const R = require('react') as typeof import('react')
+
+  const Button = R.forwardRef(
+    (props: Record<string, unknown>, ref: unknown) => {
+      const { type, size, block, danger, ghost, loading, disabled, icon, htmlType, ...rest } = props
+      return R.createElement('button', {
+        ...rest,
+        type: (htmlType as string) ?? 'button',
+        ref,
+        disabled: disabled as boolean,
+        'data-loading': loading ? '' : undefined,
+      }, (props as any).children)
+    },
+  )
+  Button.displayName = 'Button'
+
+  const Input = R.forwardRef(
+    (props: Record<string, unknown>, ref: unknown) =>
+      R.createElement('input', { ...props, ref }),
+  )
+  Input.displayName = 'Input'
+
+  const Card = R.forwardRef(
+    (props: Record<string, unknown>, ref: unknown) =>
+      R.createElement('div', { ...props, ref }, (props as any).children),
+  )
+  Card.displayName = 'Card'
+
+  const Typewriter = (props: Record<string, unknown>) => {
+    const { onDone, children } = props as { onDone?: () => void; children?: React.ReactNode }
+    R.useEffect(() => {
+      if (typeof onDone === 'function') onDone()
+    }, [onDone])
+    return R.createElement(R.Fragment, null, children)
+  }
+
+  const Modal = (props: Record<string, unknown>) => {
+    const { open, children, footer } = props as { open?: boolean; children?: React.ReactNode; footer?: React.ReactNode }
+    if (!open) return null
+    return R.createElement('div', { 'data-testid': 'modal' }, children, footer)
+  }
+
+  const Title = (props: Record<string, unknown>) =>
+    R.createElement('div', { 'data-testid': 'title' }, (props as any).children)
+
+  const Icon = (props: Record<string, unknown>) =>
+    R.createElement('span', { 'data-testid': 'icon' })
+
+  const Divider = () => R.createElement('hr', { 'data-testid': 'divider' })
+
+  const Loading = (props: Record<string, unknown>) =>
+    (props as any).active ? R.createElement('div', { 'data-testid': 'loading' }) : null
+
+  return { Button, Input, Card, Typewriter, Modal, Title, Icon, Divider, Loading, Cursor: (p: any) => p.children, Footer: () => null, ICON_LIST: [] }
+})
+
 // Mock next/navigation
 const mockPush = vi.fn()
 const mockRefresh = vi.fn()
@@ -21,7 +83,7 @@ vi.mock('next/link', () => ({
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
-const TYPEWRITER_TEXT = '哈喽！欢迎你和你的漂亮布来到布记岛！'
+const WELCOME_TEXT = '哈喽！欢迎你和你的漂亮布料一起入住布记岛！如果第一次来，请先获取登岛身份~已经有布记岛身份的居民请点击登录~'
 
 describe('LoginPage', () => {
   beforeEach(() => {
@@ -57,14 +119,11 @@ describe('LoginPage', () => {
     // Logo 阶段：无文字
     expect(screen.queryByText(/哈喽/)).toBeNull()
 
-    // 进入打字机阶段 (400ms)
+    // 进入打字机阶段 (400ms) → mock Typewriter 立即触发 onDone
     act(() => { vi.advanceTimersByTime(400) })
 
-    // 等待打字完成 (100ms/字 × 20字 + 缓冲)
-    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
-
     await waitFor(() => {
-      expect(screen.getByText('哈喽！欢迎你和你的漂亮布来到布记岛！')).toBeInTheDocument()
+      expect(screen.getByText(/欢迎你和你的漂亮布料/)).toBeInTheDocument()
     })
   })
 
@@ -72,7 +131,7 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     // 快进到按钮阶段
     act(() => { vi.advanceTimersByTime(400) })  // logo
-    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) }) // typing + delay
+    act(() => { vi.advanceTimersByTime(0 /* mock Typewriter calls onDone instantly */ * 100 + 500) }) // typing + delay
 
     expect(screen.getByText('立即登岛')).toBeInTheDocument()
     expect(screen.getByText('获取上岛身份')).toBeInTheDocument()
@@ -82,7 +141,7 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     // 快进到按钮阶段
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
+    act(() => { vi.advanceTimersByTime(0 /* mock Typewriter calls onDone instantly */ * 100 + 500) })
 
     const loginBtn = screen.getByText('立即登岛')
     await userEvent.click(loginBtn)
@@ -93,14 +152,16 @@ describe('LoginPage', () => {
     expect(screen.getByText('确认登岛')).toBeInTheDocument()
   })
 
-  it('"获取上岛身份"链接跳转到 /register', () => {
+  it('"获取上岛身份"按钮点击跳转到 /register', async () => {
     render(<LoginPage />)
     // 快进到按钮阶段
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
+    act(() => { vi.advanceTimersByTime(0 /* mock Typewriter calls onDone instantly */ * 100 + 500) })
 
-    const registerLink = screen.getByText('获取上岛身份').closest('a')
-    expect(registerLink).toHaveAttribute('href', '/register')
+    const registerBtn = screen.getByText('获取上岛身份')
+    await userEvent.click(registerBtn)
+
+    expect(mockPush).toHaveBeenCalledWith('/register')
   })
 
   it('表单提交调用登录 API', async () => {
@@ -111,7 +172,7 @@ describe('LoginPage', () => {
     render(<LoginPage />)
     // 快进到按钮阶段并点击展开
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
+    act(() => { vi.advanceTimersByTime(0 /* mock Typewriter calls onDone instantly */ * 100 + 500) })
     await userEvent.click(screen.getByText('立即登岛'))
 
     // 填写表单
@@ -137,12 +198,15 @@ describe('LoginPage', () => {
 
     render(<LoginPage />)
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
+    act(() => { vi.advanceTimersByTime(0 /* mock Typewriter calls onDone instantly */ * 100 + 500) })
     await userEvent.click(screen.getByText('立即登岛'))
 
     await userEvent.type(screen.getByPlaceholderText('your@email.com'), 'test@test.com')
     await userEvent.type(screen.getByPlaceholderText('至少 6 位'), 'password')
     await userEvent.click(screen.getByText('确认登岛'))
+
+    // 加载动画后再跳转 (1200ms setTimeout)
+    act(() => { vi.advanceTimersByTime(1200) })
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/')
@@ -157,7 +221,7 @@ describe('LoginPage', () => {
 
     render(<LoginPage />)
     act(() => { vi.advanceTimersByTime(400) })
-    act(() => { vi.advanceTimersByTime(TYPEWRITER_TEXT.length * 100 + 500) })
+    act(() => { vi.advanceTimersByTime(0 /* mock Typewriter calls onDone instantly */ * 100 + 500) })
     await userEvent.click(screen.getByText('立即登岛'))
 
     await userEvent.type(screen.getByPlaceholderText('your@email.com'), 'test@test.com')

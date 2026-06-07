@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { getDb, rowsToObjects } from './db'
 
 export interface Fabric {
   id: number
@@ -20,13 +20,13 @@ export interface Fabric {
 
 export type FabricInput = Omit<Fabric, 'id' | 'created_at' | 'updated_at'>
 
-export function getAllFabrics(
+export async function getAllFabrics(
   userId: number,
   options?: { type?: string; search?: string; sort?: string }
-): Fabric[] {
+): Promise<Fabric[]> {
   const db = getDb()
   let sql = 'SELECT * FROM fabrics WHERE user_id = ?'
-  const params: any[] = [userId]
+  const params: unknown[] = [userId]
 
   if (options?.type) {
     sql += ' AND type = ?'
@@ -39,16 +39,21 @@ export function getAllFabrics(
   }
 
   sql += ' ORDER BY created_at DESC, id DESC'
-  return db.prepare(sql).all(...params) as Fabric[]
+  const result = await db.execute({ sql, args: params })
+  return rowsToObjects<Fabric>(result.columns, result.rows)
 }
 
-export function getFabricById(id: number, userId: number): Fabric | null {
+export async function getFabricById(id: number, userId: number): Promise<Fabric | null> {
   const db = getDb()
-  const result = db.prepare('SELECT * FROM fabrics WHERE id = ? AND user_id = ?').get(id, userId)
-  return (result as Fabric) || null
+  const result = await db.execute({
+    sql: 'SELECT * FROM fabrics WHERE id = ? AND user_id = ?',
+    args: [id, userId],
+  })
+  const rows = rowsToObjects<Fabric>(result.columns, result.rows)
+  return rows[0] || null
 }
 
-export function createFabric(data: FabricInput): Fabric {
+export async function createFabric(data: FabricInput): Promise<Fabric> {
   const db = getDb()
   const defaults = {
     width: null,
@@ -61,35 +66,40 @@ export function createFabric(data: FabricInput): Fabric {
     notes: null,
   }
   const row = { ...defaults, ...data }
-  const stmt = db.prepare(`
-    INSERT INTO fabrics (user_id, name, type, width, unit, price, store, purchase_date, photo_path, photos, status, notes)
-    VALUES (@user_id, @name, @type, @width, @unit, @price, @store, @purchase_date, @photo_path, @photos, @status, @notes)
-  `)
-  const result = stmt.run(row)
-  return getFabricById(result.lastInsertRowid as number, data.user_id)!
+  const result = await db.execute({
+    sql: `INSERT INTO fabrics (user_id, name, type, width, unit, price, store, purchase_date, photo_path, photos, status, notes)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [row.user_id, row.name, row.type, row.width, row.unit, row.price, row.store, row.purchase_date, row.photo_path, row.photos, row.status, row.notes],
+  })
+  const id = Number(result.lastInsertRowid)
+  return (await getFabricById(id, data.user_id))!
 }
 
-export function updateFabric(id: number, userId: number, data: Partial<FabricInput>): Fabric | null {
-  const existing = getFabricById(id, userId)
+export async function updateFabric(id: number, userId: number, data: Partial<FabricInput>): Promise<Fabric | null> {
+  const existing = await getFabricById(id, userId)
   if (!existing) return null
 
   const db = getDb()
   const merged = { ...existing, ...data, updated_at: new Date().toISOString() }
 
-  db.prepare(`
-    UPDATE fabrics SET
-      name = @name, type = @type, width = @width, unit = @unit,
-      price = @price, store = @store, purchase_date = @purchase_date,
-      photo_path = @photo_path, photos = @photos, status = @status,
-      notes = @notes, updated_at = @updated_at
-    WHERE id = @id AND user_id = @user_id
-  `).run(merged)
+  await db.execute({
+    sql: `UPDATE fabrics SET
+            name = ?, type = ?, width = ?, unit = ?,
+            price = ?, store = ?, purchase_date = ?,
+            photo_path = ?, photos = ?, status = ?,
+            notes = ?, updated_at = ?
+          WHERE id = ? AND user_id = ?`,
+    args: [merged.name, merged.type, merged.width, merged.unit, merged.price, merged.store, merged.purchase_date, merged.photo_path, merged.photos, merged.status, merged.notes, merged.updated_at, id, userId],
+  })
 
   return getFabricById(id, userId)
 }
 
-export function deleteFabric(id: number, userId: number): boolean {
+export async function deleteFabric(id: number, userId: number): Promise<boolean> {
   const db = getDb()
-  const result = db.prepare('DELETE FROM fabrics WHERE id = ? AND user_id = ?').run(id, userId)
-  return result.changes > 0
+  const result = await db.execute({
+    sql: 'DELETE FROM fabrics WHERE id = ? AND user_id = ?',
+    args: [id, userId],
+  })
+  return result.rowsAffected > 0
 }

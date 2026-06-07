@@ -1,0 +1,113 @@
+/* Hallmark · route: custom (tuned) · vibe: "light beige paper, rose & sky, linen warmth"
+ * paper: oklch(97% 0.018 85) · accent-rose: oklch(78% 0.07 5) · accent-sky: oklch(75% 0.09 230)
+ * display: ZhaohuaTypeWriter · body: Noto Serif SC · studied: yes · DNA-source: image (user reference)
+ * axes: light / warm-serif / warm
+ * -------------------------------------------------- */
+
+:root {
+  /* === Paper (浅米色 — 如棉麻纸) === */
+  --color-paper:       oklch(97% 0.018 85);
+  --color-paper-2:     oklch(94% 0.015 85);
+  --color-paper-3:     oklch(90% 0.018 85);
+
+  /* === Ink (暖灰棕 — never pure black) === */
+  --color-ink:         oklch(30% 0.010 15);
+  --color-ink-2:       oklch(50% 0.010 15);
+  --color-ink-3:       oklch(65% 0.008 15);
+
+  /* === Primary accent — 玫瑰粉 === */
+  --color-accent:       oklch(78% 0.07 5);
+  --color-accent-hover: oklch(73% 0.08 5);
+  --color-accent-light: oklch(90% 0.035 5);
+  --color-accent-wash:  oklch(94% 0.025 10);
+  --color-accent-ink:   oklch(97% 0.010 20);
+
+  /* === Secondary accent — 天空蓝 === */
+  --color-sky:          oklch(75% 0.09 230);
+  --color-sky-light:    oklch(88% 0.05 230);
+  --color-sky-wash:     oklch(95% 0.020 230);
+
+  /* === 织物色 — 亚麻米 / 棉布本色 === */
+  --color-linen:        oklch(85% 0.045 85);
+  --color-linen-light:  oklch(92% 0.030 85);
+  --color-linen-wash:   oklch(95% 0.020 85);
+
+  /* === Greys (all pink-tinted) === */
+  --color-rule:         oklch(84% 0.010 18);
+  --color-rule-2:       oklch(89% 0.008 18);
+  --color-muted:        oklch(58% 0.010 15);
+  --color-neutral:      oklch(74% 0.008 15);
+
+  /* === Semantic === */
+  --color-success:      oklch(65% 0.10 160);
+  --color-success-wash: oklch(93% 0.030 155);
+  --color-danger:       oklch(55% 0.12 15);
+  --color-danger-wash:  oklch(93% 0.025 10);
+  --color-warning:      oklch(70% 0.12 80);
+  --color-focus:        oklch(68% 0.14 5);
+
+  /* === Typography === */
+  --font-display:       'ZhaohuaTypeWriter', 'Noto Serif SC', 'Source Han Serif SC', Georgia, serif;
+  --font-body:          'Noto Serif SC', 'Source Han Serif SC', Georgia, 'Times New Roman', serif;
+  --font-mono:          'ZhaohuaTypeWriter', 'Courier New', monospace;
+
+  /* Scale — major third (1.25) from 16px base */
+  --text-xs:            0.64rem;
+  --text-sm:            0.8rem;
+  --text-base:          1rem;
+  --text-md:            1.25rem;
+  --text-lg:            1.5625rem;
+  --text-xl:            1.9531rem;
+  --text-2xl:           2.4414rem;
+
+  /* === Spacing — 4pt scale === */
+  --space-3xs:          0.125rem;
+  --space-2xs:          0.25rem;
+  --space-xs:           0.5rem;
+  --space-sm:           0.75rem;
+  --space-md:           1rem;
+  --space-lg:           1.5rem;
+  --space-xl:           2.5rem;
+  --space-2xl:          4rem;
+  --space-3xl:          6rem;
+
+  /* === Motion === */
+  --ease-out:           cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:            cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out:        cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro:          120ms;
+  --dur-short:          220ms;
+  --dur-long:           420ms;
+
+  /* === Radii — 圆润可爱风格 ✦ === */
+  --radius-sm:          10px;
+  --radius-md:          16px;
+  --radius-lg:          24px;
+  --radius-xl:          32px;
+  --radius-pill:        999px;
+  --radius-card:        20px;
+  --radius-button:      999px;
+
+  /* === Shadows — 柔软轻盈 === */
+  --shadow-card:        0 2px 12px oklch(20% 0.01 15 / 0.05);
+  --shadow-card-hover:  0 6px 20px oklch(20% 0.01 15 / 0.10);
+  --shadow-fab:         0 4px 16px oklch(30% 0.02 5 / 0.15);
+  --shadow-button:      0 2px 8px oklch(20% 0.01 5 / 0.08);
+
+  /* === Z-index scale === */
+  --z-base:             1;
+  --z-raised:           10;
+  --z-sticky:           200;
+  --z-fab:              100;
+  --z-overlay:          400;
+  --z-toast:            500;
+
+  /* === Backward-compatible aliases === */
+  --color-primary:       var(--color-accent);
+  --color-primary-light: var(--color-accent-wash);
+  --color-bg:            var(--color-paper);
+  --color-white:         var(--color-paper-2);
+  --color-text:          var(--color-ink);
+  --color-text-secondary:var(--color-ink-2);
+  --color-border:        var(--color-rule);
+}

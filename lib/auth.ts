@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { SignJWT, jwtVerify } from 'jose'
+import { getDb, rowsToObjects } from './db'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'dev-secret-change-in-production'
@@ -52,4 +53,23 @@ export function getCookieOptions(): { name: string; httpOnly: boolean; secure: b
     path: '/',
     maxAge: 7 * 24 * 60 * 60,
   }
+}
+
+/** Verify user exists in DB — used by API routes */
+export async function getUserIdFromRequest(request: Request): Promise<number | null> {
+  const cookieHeader = request.headers.get('cookie') || ''
+  const token = cookieHeader
+    .split(';')
+    .map(c => c.trim())
+    .find(c => c.startsWith(`${COOKIE_NAME}=`))
+    ?.split('=')[1]
+  if (!token) return null
+
+  const payload = await verifyToken(token)
+  if (!payload?.userId) return null
+
+  const db = getDb()
+  const result = await db.execute({ sql: 'SELECT id FROM users WHERE id = ?', args: [payload.userId] })
+  const users = rowsToObjects<{ id: number }>(result.columns, result.rows)
+  return users[0]?.id || null
 }

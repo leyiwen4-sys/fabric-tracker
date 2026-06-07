@@ -1,49 +1,34 @@
+/* FabricForm — layout & photo upload only
+ * Input / Button / Select → animal-island-ui
+ * -------------------------------------------------- */
+
 .form {
   padding: 16px;
-}
-
-.photoUpload {
-  width: 100%;
-  min-height: 160px;
-  background: #f5f5f5;
-  border: 2px dashed #ddd;
-  border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
+  gap: 16px;
+}
+
+/* === 照片上传区 === */
+.photoUpload {
+  text-align: center;
+  padding: 40px 16px;
   cursor: pointer;
-  overflow: hidden;
-  position: relative;
+  color: var(--color-muted);
 }
 
 .photoUploadFilled {
-  width: 100%;
-  background: #f5f5f5;
-  border: 2px dashed #ddd;
-  border-radius: var(--radius-card);
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-  overflow: hidden;
-  position: relative;
-  padding: 12px;
-}
-
-.hiddenFileInput {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+  padding: 8px;
 }
 
 .uploadHint {
+  font-family: 'Noto Sans SC', 'Nunito', sans-serif;
   font-size: 13px;
-  color: var(--color-text-secondary);
-  margin-top: 4px;
+  color: var(--color-muted);
+  margin-top: 6px;
 }
 
+/* === 缩略图行 === */
 .thumbnailRow {
   display: flex;
   gap: 8px;
@@ -62,15 +47,15 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .thumbnailRemove {
   position: absolute;
   top: -6px;
   right: -6px;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--color-danger);
   color: #fff;
@@ -80,94 +65,84 @@
   font-size: 12px;
   cursor: pointer;
   line-height: 1;
-  z-index: 1;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  transition: transform 0.12s ease;
+}
+.thumbnailRemove:hover {
+  transform: scale(1.15);
 }
 
+/* === 添加按钮 === */
 .addBtn {
   width: 80px;
   height: 80px;
-  border: 2px dashed #ddd;
-  border-radius: 8px;
+  border: 2.5px dashed var(--color-rule);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
-  color: #ccc;
+  color: var(--color-muted);
   cursor: pointer;
   flex-shrink: 0;
   background: transparent;
 }
 
+/* === 选填提示 === */
+.optionalHint {
+  font-size: 16px;
+  color: var(--color-muted);
+  text-align: center;
+  margin: 0;
+}
+
+/* === Select 匹配 Input 样式 === */
+.field :global(.animal-wrapper) {
+  width: 100%;
+}
+.field :global(.animal-trigger) {
+  background: transparent !important;
+  color: var(--color-ink) !important;
+  font-size: 16px !important;
+  border-radius: 999px !important;
+  padding: 12px 16px !important;
+}
+
+/* === 字段组 === */
 .fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  align-items: center;
 }
 
 .row {
   display: flex;
   gap: 10px;
+  width: 100%;
+  align-items: flex-start;
+}
+.row > * { flex: 1; min-width: 0; }
+
+@media (max-width: 360px) {
+  .row {
+    flex-direction: column;
+  }
 }
 
-.row > * {
-  flex: 1;
+.fieldLabel {
+  font-family: 'Noto Sans SC', 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-app-green, #5b8c5a);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-}
-
-.label {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  margin-bottom: 4px;
-}
-
-.input {
+  gap: 12px;
+  align-items: center;
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-  background: var(--color-white);
 }
 
-.input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-  background: var(--color-white);
-  height: 70px;
-  resize: vertical;
-}
-
-.submit {
-  width: 100%;
-  padding: 14px;
-  margin-top: 20px;
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-button);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.submit:active {
-  opacity: 0.9;
-}
-
-.error {
-  color: var(--color-danger);
-  font-size: 12px;
-  margin-top: 4px;
-}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPassword, signToken, getCookieOptions } from '@/lib/auth'
-import { getDb } from '@/lib/db'
+import { getDb, rowsToObjects } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,9 +14,12 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getDb()
-    const user = db.prepare(
-      'SELECT id, email, password_hash FROM users WHERE email = ?'
-    ).get(email) as any
+    const result = await db.execute({
+      sql: 'SELECT id, email, password_hash FROM users WHERE email = ?',
+      args: [email],
+    })
+    const users = rowsToObjects<{ id: number; email: string; password_hash: string }>(result.columns, result.rows)
+    const user = users[0]
 
     if (!user) {
       return NextResponse.json(

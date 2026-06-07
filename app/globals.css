@@ -1,4 +1,10 @@
-/* 字体加载 */
+/* Hallmark · globals · genre: playful · theme: custom (tuned)
+ * paper: oklch(97% 0.014 20) · accent-rose: oklch(78% 0.07 5) · accent-sky: oklch(75% 0.09 230)
+ * -------------------------------------------------- */
+
+@import '../tokens.css';
+
+/* === 字体加载 === */
 @font-face {
   font-family: 'ZhaohuaTypeWriter';
   src: url('/fonts/zhaohuadaziji.ttf') format('truetype');
@@ -7,49 +13,72 @@
   font-display: swap;
 }
 
-/* 移动端优先全局样式 */
-* {
+/* === Reset === */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-:root {
-  --color-primary: #d4a574;
-  --color-primary-light: #f0e6d3;
-  --color-danger: #e74c3c;
-  --color-bg: #fafaf8;
-  --color-white: #ffffff;
-  --color-text: #333333;
-  --color-text-secondary: #888888;
-  --color-border: #eeeeee;
-  --radius-card: 12px;
-  --radius-button: 10px;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-fab: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
 }
 
 body {
-  font-family: 'ZhaohuaTypeWriter', 'Noto Serif SC', 'Source Han Serif SC',
-    Georgia, 'Times New Roman', -apple-system, sans-serif;
-  background: var(--color-bg);
-  color: var(--color-text);
+  font-family: var(--font-body);
+  background: var(--color-paper);
+  color: var(--color-ink);
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  line-height: 1.6;
+  /* 轻柔粉蓝水彩 wash */
+  background-image:
+    radial-gradient(ellipse 60% 40% at 15% 10%, var(--color-accent-wash) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 35% at 85% 90%, var(--color-sky-wash) 0%, transparent 50%);
+  background-attachment: fixed;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 a {
-  color: inherit;
+  color: var(--color-accent);
   text-decoration: none;
+  transition: opacity var(--dur-micro) var(--ease-out);
+}
+a:hover {
+  opacity: 0.75;
 }
 
 input, textarea, select, button {
-  font-family: inherit;
-  font-size: 16px; /* 防止 iOS 缩放 */
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+
+/* === Focus ring — instant, visible === */
+:focus-visible {
+  outline: 2.5px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+  transition: none;
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 150ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+  }
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+  border-radius: var(--radius-pill);
 }

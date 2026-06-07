@@ -1,27 +1,24 @@
-.card {
+/* FabricCard — compact, no-scroll 6/page */
+
+.link {
+  text-decoration: none;
   display: block;
-  position: relative;
-  background: var(--color-white);
-  border-radius: var(--radius-card);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.15s;
 }
 
-.card:active {
-  transform: scale(0.97);
+.card {
+  padding: 0 !important;
+  overflow: hidden;
 }
 
 .photo {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
+  aspect-ratio: 4 / 3;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
-  font-size: 40px;
+  background: var(--color-linen-light);
+  font-size: 28px;
 }
 
 .photo img {
@@ -31,28 +28,33 @@
 }
 
 .info {
-  padding: 8px 10px;
+  padding: 5px 8px 6px;
 }
 
 .name {
-  font-size: 13px;
-  font-weight: 600;
+  font-family: 'Noto Sans SC', 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--color-ink);
+  margin-bottom: 5px;
+  min-width: 0;
 }
 
 .meta {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  margin-top: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-muted);
 }
 
-.statusDot {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.statusBadge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 600;
 }

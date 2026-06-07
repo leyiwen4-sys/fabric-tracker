@@ -1,35 +1,66 @@
-import Database from 'better-sqlite3'
-import path from 'path'
+import { createClient, type Client } from '@libsql/client/http'
 
-let db: Database.Database
+let client: Client
+let initPromise: Promise<void> | null = null
 
-export function getDb(): Database.Database {
-  if (!db) {
-    db = new Database(path.join(process.cwd(), 'fabrics.db'))
-    db.pragma('journal_mode = WAL')
-    db.pragma('foreign_keys = ON')
-    initSchema(db)
+async function retry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T> {
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (err) {
+      if (i === maxRetries) throw err
+      // Turso 冷启动：等 1.5s 后重试
+      await new Promise(r => setTimeout(r, 1500))
+    }
   }
-  return db
+  throw new Error('unreachable')
 }
 
-function initSchema(db: Database.Database): void {
-  // Migration: check if fabrics table needs updating
-  const tableInfo = db.prepare("PRAGMA table_info('fabrics')").all() as { name: string }[]
-  const hasUserId = tableInfo.some((col) => col.name === 'user_id')
+export function getDb(): Client {
+  if (!client) {
+    const url = process.env.TURSO_DATABASE_URL
+    const authToken = process.env.TURSO_AUTH_TOKEN
 
-  if (!hasUserId) {
-    db.exec('DROP TABLE IF EXISTS fabrics')
+    if (!url || !authToken) {
+      throw new Error('Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN env vars')
+    }
+
+    client = createClient({ url, authToken })
+    // 预热连接（带重试），阻塞首次请求直到就绪
+    initPromise = retry(async () => {
+      await client.execute('SELECT 1')
+      await initSchema(client)
+    })
   }
+  return client
+}
 
-  db.exec(`
+/** 等待数据库就绪（冷启动预热） */
+export async function ensureDb(): Promise<void> {
+  getDb() // 触发初始化
+  if (initPromise) await initPromise
+}
+
+/** Convert array-based Turso rows to objects keyed by column name */
+export function rowsToObjects<T>(columns: string[], rows: unknown[][]): T[] {
+  return rows.map(row => {
+    const obj: Record<string, unknown> = {}
+    columns.forEach((col, i) => { obj[col] = row[i] })
+    return obj as T
+  })
+}
+
+async function initSchema(db: Client): Promise<void> {
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    )
+  `)
 
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS fabrics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
@@ -46,17 +77,6 @@ function initSchema(db: Database.Database): void {
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+    )
   `)
-
-  // Add missing columns for older DBs (migration)
-  if (hasUserId) {
-    const colNames = tableInfo.map((c) => c.name)
-    if (!colNames.includes('status')) {
-      db.exec("ALTER TABLE fabrics ADD COLUMN status TEXT DEFAULT 'idle'")
-    }
-    if (!colNames.includes('photos')) {
-      db.exec("ALTER TABLE fabrics ADD COLUMN photos TEXT DEFAULT '[]'")
-    }
-  }
 }

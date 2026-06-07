@@ -1,0 +1,9 @@
+{
+  "scannedAt": "2026-06-04",
+  "fontStack": "ZhaohuaTypeWriter (custom TTF) + Noto Serif SC fallback",
+  "palette": "OKLCH custom properties (tokens.css)",
+  "motion": "none — CSS transitions only",
+  "spacing": "4pt scale via --space-* tokens",
+  "framework": "Next.js 16 (app router) + Tailwind CSS v4 + CSS Modules",
+  "designMd": false
+}

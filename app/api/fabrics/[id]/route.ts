@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFabricById, updateFabric, deleteFabric } from '@/lib/fabrics'
-import { verifyToken, getCookieName } from '@/lib/auth'
-import { unlink, writeFile, mkdir } from 'fs/promises'
-import path from 'path'
-
-async function getUserId(request: NextRequest): Promise<number | null> {
-  const token = request.cookies.get(getCookieName())?.value
-  if (!token) return null
-  const payload = await verifyToken(token)
-  return payload?.userId || null
-}
+import { getUserIdFromRequest } from '@/lib/auth'
+import { uploadPhoto, deletePhoto } from '@/lib/storage'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserId(request)
+    const userId = await getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
     }
@@ -29,7 +21,7 @@ export async function GET(
         { status: 400 }
       )
     }
-    const fabric = getFabricById(id, userId)
+    const fabric = await getFabricById(id, userId)
     if (!fabric) {
       return NextResponse.json(
         { success: false, error: '布料不存在' },
@@ -50,7 +42,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserId(request)
+    const userId = await getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
     }
@@ -83,40 +75,44 @@ export async function PUT(
       updateData.status = formData.get('status') as string
     }
 
-    // Handle multi-photo update
-    const finalPhotos: string[] = []
+    // Only update photos when photo-related fields are present
+    const hasPhotoData = formData.get('existing_0') !== null
+      || formData.get('photo_0') !== null
+      || formData.get('photo_1') !== null
+      || formData.get('photo_2') !== null
 
-    // First, collect existing URLs passed from frontend
-    for (let i = 0; ; i++) {
-      const url = formData.get(`existing_${i}`)
-      if (!url) break
-      finalPhotos.push(url as string)
+    if (hasPhotoData) {
+      const finalPhotos: string[] = []
+
+      // First, collect existing URLs passed from frontend
+      for (let i = 0; ; i++) {
+        const url = formData.get(`existing_${i}`)
+        if (!url) break
+        finalPhotos.push(url as string)
+      }
+
+      // Then overlay new uploads at the same positions
+      for (let i = 0; i < 3; i++) {
+        const photo = formData.get(`photo_${i}`) as File | null
+        if (!photo || photo.size === 0) continue
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+        if (!allowedTypes.includes(photo.type)) continue
+        if (photo.size > 10 * 1024 * 1024) continue
+
+        const ext = photo.type.split('/')[1] || 'jpg'
+        const filename = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}.${ext}`
+        const buffer = Buffer.from(await photo.arrayBuffer())
+        const url = await uploadPhoto(buffer, filename, photo.type)
+        finalPhotos[i] = url
+      }
+
+      const cleanedPhotos = finalPhotos.filter(p => p).slice(0, 3)
+      updateData.photos = JSON.stringify(cleanedPhotos)
+      updateData.photo_path = cleanedPhotos[0] || null
     }
 
-    // Then overlay new uploads at the same positions
-    for (let i = 0; i < 3; i++) {
-      const photo = formData.get(`photo_${i}`) as File | null
-      if (!photo || photo.size === 0) continue
-
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
-      if (!allowedTypes.includes(photo.type)) continue
-      if (photo.size > 10 * 1024 * 1024) continue
-
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-      await mkdir(uploadsDir, { recursive: true })
-
-      const ext = photo.type.split('/')[1] || 'jpg'
-      const filename = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}.${ext}`
-      const buffer = Buffer.from(await photo.arrayBuffer())
-      await writeFile(path.join(uploadsDir, filename), buffer)
-      finalPhotos[i] = `/uploads/${filename}`
-    }
-
-    const cleanedPhotos = finalPhotos.filter(p => p).slice(0, 3)
-    updateData.photos = JSON.stringify(cleanedPhotos)
-    updateData.photo_path = cleanedPhotos[0] || null
-
-    const updated = updateFabric(id, userId, updateData)
+    const updated = await updateFabric(id, userId, updateData)
     if (!updated) {
       return NextResponse.json(
         { success: false, error: '布料不存在' },
@@ -137,7 +133,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = await getUserId(request)
+    const userId = await getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
     }
@@ -152,7 +148,7 @@ export async function DELETE(
     }
 
     // Delete associated photo files
-    const fabric = getFabricById(id, userId)
+    const fabric = await getFabricById(id, userId)
     const photosToDelete: string[] = []
     if (fabric?.photo_path) {
       photosToDelete.push(fabric.photo_path)
@@ -171,13 +167,13 @@ export async function DELETE(
     }
     for (const p of photosToDelete) {
       try {
-        await unlink(path.join(process.cwd(), 'public', p))
+        await deletePhoto(p)
       } catch {
         // File may not exist, ignore
       }
     }
 
-    const deleted = deleteFabric(id, userId)
+    const deleted = await deleteFabric(id, userId)
     if (!deleted) {
       return NextResponse.json(
         { success: false, error: '布料不存在' },

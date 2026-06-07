@@ -1,208 +1,149 @@
-/* 页面容器 - 相对定位以支持底部背景装饰 */
+/* Hallmark · page: login · genre: playful · theme: custom (tuned)
+ * animal-island-ui: Typewriter / Button / Input / Card
+ * fonts: Nunito + Noto Sans SC (bundled by animal-island-ui)
+ * -------------------------------------------------- */
+
+/* === 页面容器 — 粉蓝水彩层叠 === */
 .container {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
-  padding: 60px 20px 0;
+  justify-content: center;
+  height: 100vh;
+  height: 100dvh;
+  padding: 24px 20px env(safe-area-inset-bottom, 0px);
   text-align: center;
   overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 25%, var(--color-accent-wash) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 40% at 15% 80%, var(--color-sky-wash) 0%, transparent 50%),
+    radial-gradient(ellipse 45% 35% at 85% 60%, var(--color-linen-wash) 0%, transparent 45%),
+    var(--color-paper);
 }
 
-/* Logo 渐显 */
+/* === Logo — 柔软悬浮 === */
 .logo {
-  width: 100px;
-  height: 100px;
-  margin-bottom: 20px;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transform: translateY(12px);
+  transition: all 0.6s var(--ease-out);
+  filter: drop-shadow(0 3px 8px oklch(30% 0.02 5 / 0.08));
 }
 .logoVisible {
-  opacity: 1;
-}
-
-/* 打字机文字区域 */
-.typingArea {
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-}
-
-.typingText {
-  font-family: 'ZhaohuaTypeWriter', monospace;
-  font-size: 15px;
-  color: #6b5a4e;
-  white-space: nowrap;
-}
-
-.cursor {
-  display: inline-block;
-  width: 2px;
-  height: 16px;
-  background: #d4a574;
-  margin-left: 2px;
-  vertical-align: middle;
-  animation: blink 0.6s steps(1) infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* 副标题 */
-.subtitle {
-  font-size: 11px;
-  color: #b8a088;
-  letter-spacing: 2px;
-  margin-bottom: 28px;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.5s ease;
-}
-.subtitleVisible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* 按钮区域 */
+/* === 打字机文字 — 左对齐，宽度与按钮一致 === */
+.typingArea {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.typingLine {
+  font-family: 'Noto Sans SC', 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: #8ac68a;
+  text-align: left;
+  margin: 0;
+}
+
+/* === 按钮区域 === */
 .buttons {
   width: 100%;
   max-width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 0 8px;
+  gap: 12px;
 }
 
-.btnPrimary, .btnSecondary {
-  pointer-events: none;
-}
-
-.btnPrimary {
-  padding: 13px;
-  background: #d4a574;
-  color: #fff;
-  border: none;
-  border-radius: 25px;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  cursor: pointer;
-  font-family: inherit;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.5s ease;
-}
-.btnPrimaryVisible, .btnSecondaryVisible {
-  pointer-events: auto;
-}
-
-.btnPrimaryVisible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.btnSecondary {
-  padding: 13px;
-  background: #fff;
-  color: #d4a574;
-  border: 1.5px solid #d4a574;
-  border-radius: 25px;
-  font-size: 14px;
-  cursor: pointer;
-  font-family: inherit;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.5s ease;
-}
-.btnSecondaryVisible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* 登录表单展开 */
+/* === 登录表单区域 === */
 .formWrapper {
   width: 100%;
-  max-width: 300px;
-  padding: 0 8px;
+  max-width: 320px;
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height 0.4s var(--ease-out);
   margin-top: 0;
 }
 .formExpanded {
-  max-height: 260px;
+  max-height: 320px;
+  overflow-y: auto;
   margin-top: 16px;
 }
 
+.formLabel {
+  font-family: 'Noto Sans SC', 'Nunito', sans-serif;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  display: block;
+  margin-bottom: 4px;
+  margin-top: 12px;
+}
+.formLabel:first-child {
+  margin-top: 0;
+}
+
+/* === 表单字段间距 === */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
-.input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.input:focus {
-  border-color: #d4a574;
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.submitBtn {
-  width: 100%;
-  padding: 13px;
-  background: #d4a574;
-  color: #fff;
-  border: none;
-  border-radius: 25px;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: opacity 0.2s;
-}
-.submitBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* === 表单内 Input 覆盖 — 透明底 + 棕色字 === */
+.form input {
+  background: transparent !important;
+  color: var(--color-ink) !important;
 }
 
+.submitWrap {
+  margin-top: 8px;
+}
+
+/* === 错误提示 === */
 .error {
-  color: #e74c3c;
-  font-size: 12px;
+  font-family: 'Noto Sans SC', 'Nunito', sans-serif;
+  font-size: 13px;
+  color: var(--color-danger);
   text-align: center;
+  display: block;
+  padding: 8px 12px 0;
 }
 
-/* 底部背景装饰 */
+/* === 底部水彩装饰 === */
 .bgDecoration {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 30%;
+  height: 26%;
   overflow: hidden;
-  opacity: 0.6;
+  opacity: 0.4;
   z-index: -1;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 100%, var(--color-sky-wash) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 50% at 20% 90%, var(--color-accent-wash) 0%, transparent 50%);
 }
 .bgDecoration img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: bottom;
+  display: none;
 }
 .bgGradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, var(--color-bg, #fafaf8) 0%, transparent 100%);
+  background: linear-gradient(0deg, var(--color-paper) 0%, transparent 100%);
 }

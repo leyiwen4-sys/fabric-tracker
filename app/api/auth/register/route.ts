@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hashPassword } from '@/lib/auth'
-import { getDb } from '@/lib/db'
+import { getDb, rowsToObjects } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
     const db = getDb()
 
     // Check if email already exists
-    const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email)
-    if (existing) {
+    const existingResult = await db.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] })
+    const existing = rowsToObjects<{ id: number }>(existingResult.columns, existingResult.rows)
+    if (existing.length > 0) {
       return NextResponse.json(
         { success: false, error: '该邮箱已被注册' },
         { status: 400 }
@@ -34,12 +35,13 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password)
-    const result = db.prepare(
-      'INSERT INTO users (email, password_hash) VALUES (?, ?)'
-    ).run(email, passwordHash)
+    const result = await db.execute({
+      sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
+      args: [email, passwordHash],
+    })
 
     return NextResponse.json(
-      { success: true, data: { id: result.lastInsertRowid, email } },
+      { success: true, data: { id: Number(result.lastInsertRowid), email } },
       { status: 201 }
     )
   } catch (error) {

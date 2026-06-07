@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Fabric } from '@/lib/fabrics'
-import { showToast } from '@/components/Toast'
-import { Card, Button, Icon } from 'animal-island-ui'
+import { Card, Button, Icon, Select, Modal } from 'animal-island-ui'
 import styles from './FabricDetail.module.css'
 
 export default function FabricDetail({ fabric }: { fabric: Fabric }) {
   const router = useRouter()
   const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const photos: string[] = (() => {
     try { return JSON.parse(fabric.photos || '[]') }
@@ -17,36 +18,35 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
   })()
   const [activePhoto, setActivePhoto] = useState<string | null>(photos[0] || null)
 
-  const statusLabels: Record<string, string> = {
-    idle: '🟢 闲置',
-    used: '🟡 已用',
-    empty: '⚪ 已用完',
-  }
+  const STATUS_OPTIONS = [
+    { key: 'idle', label: '闲置中~' },
+    { key: 'used', label: '用掉一点啦~' },
+    { key: 'empty', label: '已经用完啦！' },
+  ]
 
-  async function toggleStatus() {
-    const statuses = ['idle', 'used', 'empty']
-    const currentIndex = statuses.indexOf(fabric.status || 'idle')
-    const nextStatus = statuses[(currentIndex + 1) % 3]
+  const [currentStatus, setCurrentStatus] = useState(fabric.status || 'idle')
 
+  async function handleStatusChange(status: string) {
+    setCurrentStatus(status)
     try {
       const fd = new FormData()
-      fd.append('status', nextStatus)
+      fd.append('status', status)
       const res = await fetch(`/api/fabrics/${fabric.id}`, { method: 'PUT', body: fd })
       const json = await res.json()
       if (json.success) {
-        window.location.reload()
+        router.refresh()
       } else {
-        showToast(json.error || '更新失败', 'error')
+        setError(json.error || '更新失败')
+        setCurrentStatus(fabric.status || 'idle')
       }
     } catch {
-      showToast('状态更新失败', 'error')
+      setError('状态更新失败')
+      setCurrentStatus(fabric.status || 'idle')
     }
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm('确定要删除这块布料吗？此操作不可撤销。')
-    if (!confirmed) return
-
+    setShowDeleteConfirm(false)
     setDeleting(true)
     try {
       const res = await fetch(`/api/fabrics/${fabric.id}`, { method: 'DELETE' })
@@ -55,10 +55,10 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
         router.push('/')
         router.refresh()
       } else {
-        showToast(json.error || '删除失败', 'error')
+        setError(json.error || '删除失败')
       }
     } catch {
-      showToast('删除失败，请重试', 'error')
+      setError('删除失败，请重试')
     } finally {
       setDeleting(false)
     }
@@ -91,18 +91,31 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
       )}
 
       <div className={styles.body}>
-        <div className={styles.tags}>
-          <span className={styles.tag} onClick={toggleStatus} style={{ cursor: 'pointer' }}>
-            {statusLabels[fabric.status || 'idle']}
-          </span>
-          <span className={styles.tag}>{fabric.type}</span>
-          {fabric.width && <span className={styles.tag}>{fabric.width}cm</span>}
-          {fabric.price && (
-            <span className={styles.tag}>¥{fabric.price}/{fabric.unit}</span>
-          )}
-        </div>
-
         <div className={styles.infoList}>
+          <div className={styles.infoRow}>
+            <span className={styles.infoLabel}>状态</span>
+            <Select
+              value={currentStatus}
+              onChange={handleStatusChange}
+              options={STATUS_OPTIONS}
+            />
+          </div>
+          <div className={styles.infoRow}>
+            <span className={styles.infoLabel}>类型</span>
+            <span>{fabric.type}</span>
+          </div>
+          {fabric.width && (
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>幅宽</span>
+              <span>{fabric.width}cm</span>
+            </div>
+          )}
+          {fabric.price && (
+            <div className={styles.infoRow}>
+              <span className={styles.infoLabel}>单价</span>
+              <span>¥{fabric.price}/{fabric.unit}</span>
+            </div>
+          )}
           {fabric.store && (
             <div className={styles.infoRow}>
               <span className={styles.infoLabel}>店铺</span>
@@ -135,15 +148,45 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
           编辑
         </Button>
         <Button
-          type="default"
+          type="primary"
           size="large"
           icon={<Icon item={474} size={18} />}
-          onClick={handleDelete}
+          onClick={() => setShowDeleteConfirm(true)}
           disabled={deleting}
+          style={{ flex: 1 }}
         >
           {deleting ? '删除中...' : '删除'}
         </Button>
       </div>
+
+      {/* 删除确认弹窗 */}
+      <Modal
+        open={showDeleteConfirm}
+        title="确认删除"
+        onClose={() => setShowDeleteConfirm(false)}
+        typewriter={false}
+        footer={
+          <>
+            <Button type="primary" onClick={() => setShowDeleteConfirm(false)}>再想想~</Button>
+            <Button type="primary" onClick={handleDelete}>嗯，删除</Button>
+          </>
+        }
+      >
+        确定要删除这块布料吗？此操作不可撤销 🧵
+      </Modal>
+
+      {/* 错误弹窗 */}
+      <Modal
+        open={!!error}
+        title="提示"
+        onClose={() => setError(null)}
+        typewriter={false}
+        footer={
+          <Button type="primary" onClick={() => setError(null)}>确定</Button>
+        }
+      >
+        {error}
+      </Modal>
     </>
   )
 }

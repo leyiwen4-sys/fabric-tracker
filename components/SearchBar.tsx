@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { Input } from 'animal-island-ui'
 
 export default function SearchBar() {
   const router = useRouter()
@@ -23,21 +24,13 @@ export default function SearchBar() {
   }, [value])  // eslint-disable-line
 
   return (
-    <div style={{ padding: '8px 12px', background: 'var(--color-bg)' }}>
-      <input
-        type="text"
+    <div style={{ padding: '8px 12px' }}>
+      <Input
         placeholder="🔍 搜索布料名称、店铺..."
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '8px 12px',
-          border: '1px solid var(--color-border)',
-          borderRadius: '8px',
-          fontSize: '14px',
-          background: 'var(--color-white)',
-          outline: 'none',
-        }}
+        allowClear
+        shadow
       />
     </div>
   )

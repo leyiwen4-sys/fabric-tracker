@@ -17,13 +17,17 @@ export default async function FabricDetailPage({ params }: { params: Promise<{ i
   const payload = token ? await verifyToken(token) : null
   const userId = payload?.userId || 0
 
-  const fabric = userId ? getFabricById(id, userId) : null
+  const fabric = userId ? await getFabricById(id, userId) : null
   if (!fabric) notFound()
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-paper)' }}>
-      <BackHeader title={fabric.name} href="/" />
-      <FabricDetail fabric={fabric} />
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--color-paper)' }}>
+      <div style={{ flexShrink: 0 }}>
+        <BackHeader title={fabric.name} href="/" />
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        <FabricDetail fabric={fabric} />
+      </div>
     </div>
   )
 }

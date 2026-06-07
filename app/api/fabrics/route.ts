@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllFabrics, createFabric, FabricInput } from '@/lib/fabrics'
-import { verifyToken, getCookieName } from '@/lib/auth'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
-
-async function getUserId(request: NextRequest): Promise<number | null> {
-  const token = request.cookies.get(getCookieName())?.value
-  if (!token) return null
-  const payload = await verifyToken(token)
-  return payload?.userId || null
-}
+import { getUserIdFromRequest } from '@/lib/auth'
+import { uploadPhoto } from '@/lib/storage'
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserId(request)
+    const userId = await getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
     }
@@ -22,7 +14,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || undefined
     const search = searchParams.get('search') || undefined
     const sort = searchParams.get('sort') || 'created_at_desc'
-    const fabrics = getAllFabrics(userId, { type, search, sort })
+    const fabrics = await getAllFabrics(userId, { type, search, sort })
     return NextResponse.json({ success: true, data: fabrics })
   } catch (error) {
     return NextResponse.json(
@@ -34,7 +26,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserId(request)
+    const userId = await getUserIdFromRequest(request)
     if (!userId) {
       return NextResponse.json({ success: false, error: '未登录' }, { status: 401 })
     }
@@ -75,14 +67,11 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
-      await mkdir(uploadsDir, { recursive: true })
-
       const ext = photo.type.split('/')[1] || 'jpg'
       const filename = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}.${ext}`
       const buffer = Buffer.from(await photo.arrayBuffer())
-      await writeFile(path.join(uploadsDir, filename), buffer)
-      photoPaths.push(`/uploads/${filename}`)
+      const url = await uploadPhoto(buffer, filename, photo.type)
+      photoPaths.push(url)
     }
 
     const photos = photoPaths.length > 0 ? JSON.stringify(photoPaths) : '[]'
@@ -103,11 +92,12 @@ export async function POST(request: NextRequest) {
       notes: (formData.get('notes') as string) || null,
     }
 
-    const fabric = createFabric(fabricData)
+    const fabric = await createFabric(fabricData)
     return NextResponse.json({ success: true, data: fabric }, { status: 201 })
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { success: false, error: '添加布料失败' },
+      { success: false, error: `添加布料失败: ${message}` },
       { status: 500 }
     )
   }

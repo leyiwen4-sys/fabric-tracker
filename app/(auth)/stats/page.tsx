@@ -1,11 +1,13 @@
 import { cookies } from 'next/headers'
 import { verifyToken, getCookieName } from '@/lib/auth'
-import { getDb } from '@/lib/db'
-import Link from 'next/link'
+import { getDb, rowsToObjects } from '@/lib/db'
+import { Title, Card, Wallet, Icon } from 'animal-island-ui'
+import BackButton from '@/components/BackButton'
+import StatsTabs from '@/components/StatsTabs'
 
 export const dynamic = 'force-dynamic'
 
-const statusMap: Record<string, string> = { idle: '闲置', used: '已用', empty: '已用完' }
+const statusLabel: Record<string, string> = { idle: '闲置中~', used: '用掉一点啦~', empty: '已经用完啦！' }
 
 export default async function StatsPage() {
   const cookieStore = await cookies()
@@ -14,66 +16,63 @@ export default async function StatsPage() {
   const userId = payload?.userId || 0
 
   const db = getDb()
-  const { count } = db.prepare('SELECT COUNT(*) as count FROM fabrics WHERE user_id = ?').get(userId) as any
-  const { total } = db.prepare('SELECT COALESCE(SUM(price), 0) as total FROM fabrics WHERE user_id = ?').get(userId) as any
-  const byType = db.prepare('SELECT type, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY type ORDER BY count DESC').all(userId) as any[]
-  const byStatus = db.prepare('SELECT status, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY status').all(userId) as any[]
 
-  const maxTypeCount = Math.max(1, ...byType.map((t: any) => t.count))
+  const countResult = await db.execute({ sql: 'SELECT COUNT(*) as count FROM fabrics WHERE user_id = ?', args: [userId] })
+  const count = (rowsToObjects<{ count: number }>(countResult.columns, countResult.rows)[0]?.count) || 0
+
+  const totalResult = await db.execute({ sql: 'SELECT COALESCE(SUM(price), 0) as total FROM fabrics WHERE user_id = ?', args: [userId] })
+  const total = (rowsToObjects<{ total: number }>(totalResult.columns, totalResult.rows)[0]?.total) || 0
+
+  const byTypeResult = await db.execute({ sql: 'SELECT type as name, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY type ORDER BY count DESC', args: [userId] })
+  const byType = rowsToObjects<{ name: string; count: number }>(byTypeResult.columns, byTypeResult.rows)
+
+  const byStatusRawResult = await db.execute({ sql: 'SELECT status FROM fabrics WHERE user_id = ?', args: [userId] })
+  const byStatusRaw = rowsToObjects<{ status: string }>(byStatusRawResult.columns, byStatusRawResult.rows)
+  const statusData = ['idle', 'used', 'empty'].map(s => ({
+    name: statusLabel[s],
+    count: byStatusRaw.filter((r) => r.status === s).length,
+  }))
+
+  const byStoreResult = await db.execute({ sql: "SELECT store as name, COUNT(*) as count FROM fabrics WHERE user_id = ? AND store IS NOT NULL AND store != '' GROUP BY store ORDER BY count DESC", args: [userId] })
+  const byStore = rowsToObjects<{ name: string; count: number }>(byStoreResult.columns, byStoreResult.rows)
 
   return (
-    <div>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--color-paper)' }}>
+      {/* 页头 — 标题居中 */}
       <header style={{
-        padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '8px',
-        background: 'var(--color-white)', borderBottom: '1px solid var(--color-border)',
+        padding: '14px 16px 10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        flexShrink: 0,
       }}>
-        <Link href="/" style={{ fontSize: '18px' }}>←</Link>
-        <span style={{ fontSize: '17px', fontWeight: 600 }}>📊 统计</span>
+        <div style={{ position: 'absolute', left: 16 }}>
+          <BackButton href="/" />
+        </div>
+        <Title size="middle" color="app-yellow">布记岛统计处</Title>
       </header>
 
-      <div style={{ padding: '16px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-          <div style={{ background: 'var(--color-white)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: 700 }}>{count}</div>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>📦 总布料数</div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', minHeight: 0 }}>
+        {/* 总览 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <Wallet value={count} icon={<Icon item={432} size={45} />}  />
+            <div style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginTop: '6px' }}>总布料数</div>
           </div>
-          <div style={{ background: 'var(--color-white)', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-            <div style={{ fontSize: '28px', fontWeight: 700 }}>¥{total || 0}</div>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>💰 总花费</div>
+          <div style={{ textAlign: 'center' }}>
+            <Wallet value={`¥${total || 0}`} />
+            <div style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginTop: '6px' }}>总花费</div>
           </div>
         </div>
 
-        {byType.length > 0 && (
-          <>
-            <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px' }}>📊 按类型分布</h3>
-            {byType.map((t: any) => (
-              <div key={t.type} style={{ marginBottom: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '2px' }}>
-                  <span>{t.type}</span><span>{t.count} 块</span>
-                </div>
-                <div style={{ background: '#eee', borderRadius: '4px', height: '8px', overflow: 'hidden' }}>
-                  <div style={{
-                    background: 'var(--color-primary)', height: '100%',
-                    width: `${(t.count / maxTypeCount) * 100}%`, borderRadius: '4px',
-                  }} />
-                </div>
-              </div>
-            ))}
-          </>
-        )}
-
-        <h3 style={{ fontSize: '15px', fontWeight: 600, margin: '20px 0 12px' }}>📋 按状态分布</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-          {['idle', 'used', 'empty'].map(s => {
-            const found = byStatus.find((x: any) => x.status === s)
-            return (
-              <div key={s} style={{ background: 'var(--color-white)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
-                <div style={{ fontSize: '22px', fontWeight: 600 }}>{found?.count || 0}</div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>{statusMap[s]}</div>
-              </div>
-            )
-          })}
-        </div>
+        <Card style={{ background: 'transparent' }}>
+          <StatsTabs data={{
+            type: byType,
+            status: statusData,
+            store: byStore,
+          }} total={count} />
+        </Card>
       </div>
     </div>
   )
