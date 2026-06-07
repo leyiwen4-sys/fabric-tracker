@@ -17,12 +17,23 @@ function getUrl(): string {
   return url + '/v2/pipeline'
 }
 
+/** 将 JS 原始值转为 Turso pipeline 要求的带类型参数 */
+function typedArg(v: unknown): Record<string, unknown> {
+  if (v === null || v === undefined) return { type: 'null' }
+  if (typeof v === 'number') {
+    return Number.isInteger(v) ? { type: 'integer', value: String(v) } : { type: 'real', value: String(v) }
+  }
+  return { type: 'text', value: String(v) }
+}
+
 export async function execute(sql: string, args?: unknown[]): Promise<TursoResult> {
   if (!TURSO_TOKEN) throw new Error('Missing TURSO_AUTH_TOKEN env var')
 
+  const typedArgs = (args || []).map(typedArg)
+
   const body = JSON.stringify({
     requests: [
-      { type: 'execute', stmt: { sql, args: args || [] } },
+      { type: 'execute', stmt: { sql, args: typedArgs } },
     ],
   })
 
