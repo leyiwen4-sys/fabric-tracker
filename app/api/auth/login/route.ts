@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyPassword, signToken, getCookieOptions } from '@/lib/auth'
 import { getDb, rowsToObjects } from '@/lib/db'
 
+export async function GET() {
+  return NextResponse.json({ ok: true, route: 'login' })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -54,8 +58,10 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Login error:', msg)
     return NextResponse.json(
-      { success: false, error: '登录失败，请重试' },
+      { success: false, error: '登录失败：' + msg },
       { status: 500 }
     )
   }

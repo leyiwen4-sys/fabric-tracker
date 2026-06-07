@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { hashPassword } from '@/lib/auth'
 import { getDb, rowsToObjects } from '@/lib/db'
 
+export async function GET() {
+  return NextResponse.json({ ok: true, route: 'register' })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -45,8 +49,10 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('Register error:', msg)
     return NextResponse.json(
-      { success: false, error: '注册失败，请重试' },
+      { success: false, error: '注册失败：' + msg },
       { status: 500 }
     )
   }
