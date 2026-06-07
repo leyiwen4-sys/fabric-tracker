@@ -5,7 +5,7 @@ export async function GET() {
   try {
     await ensureSchema()
     await execute('SELECT 1')
-    return NextResponse.json({ ok: true, db: 'connected' })
+    return NextResponse.json({ ok: true, db: 'connected', version: 2 })
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message || String(err) }, { status: 500 })
   }
