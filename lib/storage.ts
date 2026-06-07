@@ -1,15 +1,17 @@
-import COS from 'cos-nodejs-sdk-v5'
+import type COS from 'cos-nodejs-sdk-v5'
 
 let cosClient: COS | null = null
 
-function getCos(): COS {
+async function getCos(): Promise<COS> {
   if (!cosClient) {
     const secretId = process.env.COS_SECRET_ID
     const secretKey = process.env.COS_SECRET_KEY
     if (!secretId || !secretKey) {
       throw new Error('Missing COS_SECRET_ID or COS_SECRET_KEY env vars')
     }
-    cosClient = new COS({
+    // 惰性加载，避免 EdgeOne 冷启动加载重型 SDK
+    const COSModule = await import('cos-nodejs-sdk-v5')
+    cosClient = new COSModule.default({
       SecretId: secretId,
       SecretKey: secretKey,
     })
@@ -21,7 +23,7 @@ const BUCKET = process.env.COS_BUCKET || ''
 const REGION = process.env.COS_REGION || 'ap-guangzhou'
 
 export async function uploadPhoto(buffer: Buffer, filename: string, contentType: string): Promise<string> {
-  const cos = getCos()
+  const cos = await getCos()
   const key = `uploads/${filename}`
 
   return new Promise((resolve, reject) => {
@@ -39,7 +41,7 @@ export async function uploadPhoto(buffer: Buffer, filename: string, contentType:
 }
 
 export async function deletePhoto(url: string): Promise<void> {
-  const cos = getCos()
+  const cos = await getCos()
   // Extract key from URL: https://bucket.cos.region.myqcloud.com/uploads/xxx.jpg → uploads/xxx.jpg
   const key = url.replace(/^https:\/\/[^/]+\/[^/]+\//, '')
 
