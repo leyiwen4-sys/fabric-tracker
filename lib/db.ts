@@ -1,4 +1,4 @@
-import { createClient, type Client } from '@libsql/client/http'
+import { createClient, type Client, type Row } from '@libsql/client/http'
 
 let client: Client
 let initPromise: Promise<void> | null = null
@@ -41,8 +41,8 @@ export async function ensureDb(): Promise<void> {
   if (initPromise) await initPromise
 }
 
-/** Convert array-based Turso rows to objects keyed by column name */
-export function rowsToObjects<T>(columns: string[], rows: unknown[][]): T[] {
+/** Convert Turso Row[] to typed objects keyed by column name */
+export function rowsToObjects<T>(columns: string[], rows: Row[]): T[] {
   return rows.map(row => {
     const obj: Record<string, unknown> = {}
     columns.forEach((col, i) => { obj[col] = row[i] })
