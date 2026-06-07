@@ -7,7 +7,7 @@
 /* === 字体加载 === */
 @font-face {
   font-family: 'ZhaohuaTypeWriter';
-  src: url('/fonts/zhaohuadaziji.ttf') format('truetype');
+  src: url('https://fabric-photos-1440973211.cos.ap-guangzhou.myqcloud.com/fonts/zhaohuadaziji.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
