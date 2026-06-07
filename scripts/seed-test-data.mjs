@@ -1,4 +1,4 @@
-import { createClient } from '@libsql/client/http'
+import { createClient } from '@libsql/client'
 import bcrypt from 'bcryptjs'
 
 // Load .env file manually (no dotenv dependency needed for scripts)

@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { verifyToken, getCookieName } from '@/lib/auth'
-import { getDb, rowsToObjects } from '@/lib/db'
+import { execute, ensureSchema, rowsToObjects } from '@/lib/db'
 import { Title, Card, Wallet, Icon } from 'animal-island-ui'
 import BackButton from '@/components/BackButton'
 import StatsTabs from '@/components/StatsTabs'
@@ -15,25 +15,25 @@ export default async function StatsPage() {
   const payload = token ? await verifyToken(token) : null
   const userId = payload?.userId || 0
 
-  const db = getDb()
+  await ensureSchema()
 
-  const countResult = await db.execute({ sql: 'SELECT COUNT(*) as count FROM fabrics WHERE user_id = ?', args: [userId] })
+  const countResult = await execute('SELECT COUNT(*) as count FROM fabrics WHERE user_id = ?', [userId])
   const count = (rowsToObjects<{ count: number }>(countResult.columns, countResult.rows)[0]?.count) || 0
 
-  const totalResult = await db.execute({ sql: 'SELECT COALESCE(SUM(price), 0) as total FROM fabrics WHERE user_id = ?', args: [userId] })
+  const totalResult = await execute('SELECT COALESCE(SUM(price), 0) as total FROM fabrics WHERE user_id = ?', [userId])
   const total = (rowsToObjects<{ total: number }>(totalResult.columns, totalResult.rows)[0]?.total) || 0
 
-  const byTypeResult = await db.execute({ sql: 'SELECT type as name, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY type ORDER BY count DESC', args: [userId] })
+  const byTypeResult = await execute('SELECT type as name, COUNT(*) as count FROM fabrics WHERE user_id = ? GROUP BY type ORDER BY count DESC', [userId])
   const byType = rowsToObjects<{ name: string; count: number }>(byTypeResult.columns, byTypeResult.rows)
 
-  const byStatusRawResult = await db.execute({ sql: 'SELECT status FROM fabrics WHERE user_id = ?', args: [userId] })
+  const byStatusRawResult = await execute('SELECT status FROM fabrics WHERE user_id = ?', [userId])
   const byStatusRaw = rowsToObjects<{ status: string }>(byStatusRawResult.columns, byStatusRawResult.rows)
   const statusData = ['idle', 'used', 'empty'].map(s => ({
     name: statusLabel[s],
     count: byStatusRaw.filter((r) => r.status === s).length,
   }))
 
-  const byStoreResult = await db.execute({ sql: "SELECT store as name, COUNT(*) as count FROM fabrics WHERE user_id = ? AND store IS NOT NULL AND store != '' GROUP BY store ORDER BY count DESC", args: [userId] })
+  const byStoreResult = await execute("SELECT store as name, COUNT(*) as count FROM fabrics WHERE user_id = ? AND store IS NOT NULL AND store != '' GROUP BY store ORDER BY count DESC", [userId])
   const byStore = rowsToObjects<{ name: string; count: number }>(byStoreResult.columns, byStoreResult.rows)
 
   return (

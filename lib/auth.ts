@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { SignJWT, jwtVerify } from 'jose'
-import { getDb, rowsToObjects } from './db'
+import { execute, ensureSchema, rowsToObjects } from './db'
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'dev-secret-change-in-production'
@@ -68,8 +68,8 @@ export async function getUserIdFromRequest(request: Request): Promise<number | n
   const payload = await verifyToken(token)
   if (!payload?.userId) return null
 
-  const db = getDb()
-  const result = await db.execute({ sql: 'SELECT id FROM users WHERE id = ?', args: [payload.userId] })
+  await ensureSchema()
+  const result = await execute('SELECT id FROM users WHERE id = ?', [payload.userId])
   const users = rowsToObjects<{ id: number }>(result.columns, result.rows)
   return users[0]?.id || null
 }

@@ -1,57 +1,71 @@
-import { createClient, type Client, type Row } from '@libsql/client/http'
+const TURSO_URL = process.env.TURSO_DATABASE_URL || ''
+const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || ''
 
-let client: Client
-let initPromise: Promise<void> | null = null
+type TursoRow = Array<unknown>
 
-async function retry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T> {
-  for (let i = 0; i <= maxRetries; i++) {
-    try {
-      return await fn()
-    } catch (err) {
-      if (i === maxRetries) throw err
-      // Turso 冷启动：等 1.5s 后重试
-      await new Promise(r => setTimeout(r, 1500))
-    }
-  }
-  throw new Error('unreachable')
+interface TursoResult {
+  columns: string[]
+  rows: TursoRow[]
+  rowsAffected: number
+  lastInsertRowid: string | null
 }
 
-export function getDb(): Client {
-  if (!client) {
-    const url = process.env.TURSO_DATABASE_URL
-    const authToken = process.env.TURSO_AUTH_TOKEN
-
-    if (!url || !authToken) {
-      throw new Error('Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN env vars')
-    }
-
-    client = createClient({ url, authToken })
-    // 预热连接（带重试），阻塞首次请求直到就绪
-    initPromise = retry(async () => {
-      await client.execute('SELECT 1')
-      await initSchema(client)
-    })
-  }
-  return client
+function getUrl(): string {
+  if (!TURSO_URL) throw new Error('Missing TURSO_DATABASE_URL env var')
+  // libsql:// → https://
+  const url = TURSO_URL.replace('libsql://', 'https://')
+  return url + '/v2/pipeline'
 }
 
-/** 等待数据库就绪（冷启动预热） */
-export async function ensureDb(): Promise<void> {
-  getDb() // 触发初始化
-  if (initPromise) await initPromise
-}
+export async function execute(sql: string, args?: unknown[]): Promise<TursoResult> {
+  if (!TURSO_TOKEN) throw new Error('Missing TURSO_AUTH_TOKEN env var')
 
-/** Convert Turso Row[] to typed objects keyed by column name */
-export function rowsToObjects<T>(columns: string[], rows: Row[]): T[] {
-  return rows.map(row => {
-    const obj: Record<string, unknown> = {}
-    columns.forEach((col, i) => { obj[col] = row[i] })
-    return obj as T
+  const body = JSON.stringify({
+    requests: [
+      { type: 'execute', stmt: { sql, args: args || [] } },
+    ],
   })
+
+  const res = await fetch(getUrl(), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${TURSO_TOKEN}`,
+    },
+    body,
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Turso HTTP ${res.status}: ${text.slice(0, 200)}`)
+  }
+
+  const json = await res.json() as any
+  const result = json.results?.[0]?.response?.result
+
+  if (!result) {
+    throw new Error('Unexpected Turso response: ' + JSON.stringify(json).slice(0, 200))
+  }
+
+  return {
+    columns: result.cols?.map((c: any) => c.name) || [],
+    rows: result.rows || [],
+    rowsAffected: result.rows_affected || 0,
+    lastInsertRowid: result.last_insert_rowid || null,
+  }
 }
 
-async function initSchema(db: Client): Promise<void> {
-  await db.execute(`
+let schemaReady = false
+
+export async function ensureSchema(): Promise<void> {
+  if (!schemaReady) {
+    await initSchema()
+    schemaReady = true
+  }
+}
+
+async function initSchema(): Promise<void> {
+  await execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
@@ -59,8 +73,7 @@ async function initSchema(db: Client): Promise<void> {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `)
-
-  await db.execute(`
+  await execute(`
     CREATE TABLE IF NOT EXISTS fabrics (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
@@ -79,4 +92,13 @@ async function initSchema(db: Client): Promise<void> {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `)
+}
+
+/** Convert Turso rows to typed objects keyed by column name */
+export function rowsToObjects<T>(columns: string[], rows: TursoRow[]): T[] {
+  return rows.map(row => {
+    const obj: Record<string, unknown> = {}
+    columns.forEach((col, i) => { obj[col] = row[i] })
+    return obj as T
+  })
 }
