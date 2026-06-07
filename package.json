@@ -8,9 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed": "node scripts/seed-test-data.mjs"
   },
   "dependencies": {
+    "animal-island-ui": "^0.9.8",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",
     "jose": "^6.2.3",
@@ -32,6 +34,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "jsdom": "^29.1.1",
+    "playwright": "^1.60.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.8"
