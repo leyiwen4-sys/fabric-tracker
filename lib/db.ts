@@ -58,9 +58,14 @@ export async function execute(sql: string, args?: unknown[]): Promise<TursoResul
     throw new Error('Unexpected Turso response: ' + JSON.stringify(json).slice(0, 200))
   }
 
+  // Unwrap typed values from Turso response: {type:"text",value:"hello"} → "hello"
+  const unwrapRows = (result.rows || []).map((row: any[]) =>
+    row.map((cell: any) => (cell && typeof cell === 'object' && 'value' in cell) ? cell.value : cell)
+  )
+
   return {
     columns: result.cols?.map((c: any) => c.name) || [],
-    rows: result.rows || [],
+    rows: unwrapRows,
     rowsAffected: result.rows_affected || 0,
     lastInsertRowid: result.last_insert_rowid || null,
   }
