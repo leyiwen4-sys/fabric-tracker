@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import type { Fabric } from '@/lib/fabrics'
 import { showToast } from '@/components/Toast'
+import { Card, Button, Icon } from 'animal-island-ui'
 import styles from './FabricDetail.module.css'
 
 export default function FabricDetail({ fabric }: { fabric: Fabric }) {
@@ -66,13 +66,15 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
 
   return (
     <>
-      <div className={styles.photo}>
-        {activePhoto ? (
-          <img src={activePhoto} alt={fabric.name} />
-        ) : (
-          '🧶'
-        )}
-      </div>
+      <Card style={{ background: 'transparent', margin: '0 12px' }}>
+        <div className={styles.photo}>
+          {activePhoto ? (
+            <img src={activePhoto} alt={fabric.name} />
+          ) : (
+            '🧶'
+          )}
+        </div>
+      </Card>
 
       {photos.length > 1 && (
         <div className={styles.thumbnailStrip}>
@@ -123,16 +125,24 @@ export default function FabricDetail({ fabric }: { fabric: Fabric }) {
       </div>
 
       <div className={styles.actions}>
-        <Link href={`/fabrics/${fabric.id}/edit`} className={styles.editBtn}>
-          ✏️ 编辑
-        </Link>
-        <button
-          className={styles.deleteBtn}
+        <Button
+          type="primary"
+          size="large"
+          icon={<Icon item={447} size={18} />}
+          onClick={() => router.push(`/fabrics/${fabric.id}/edit`)}
+          style={{ flex: 1 }}
+        >
+          编辑
+        </Button>
+        <Button
+          type="default"
+          size="large"
+          icon={<Icon item={474} size={18} />}
           onClick={handleDelete}
           disabled={deleting}
         >
-          {deleting ? '删除中...' : '🗑'}
-        </button>
+          {deleting ? '删除中...' : '删除'}
+        </Button>
       </div>
     </>
   )

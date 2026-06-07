@@ -3,6 +3,7 @@ import { verifyToken, getCookieName } from '@/lib/auth'
 import { getFabricById } from '@/lib/fabrics'
 import { notFound } from 'next/navigation'
 import FabricDetail from '@/components/FabricDetail'
+import BackHeader from '@/components/BackHeader'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,18 +21,8 @@ export default async function FabricDetailPage({ params }: { params: Promise<{ i
   if (!fabric) notFound()
 
   return (
-    <div>
-      <header style={{
-        padding: '12px 16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        background: 'var(--color-white)',
-        borderBottom: '1px solid var(--color-border)',
-      }}>
-        <a href="/" style={{ fontSize: '18px' }}>←</a>
-        <span style={{ fontSize: '17px', fontWeight: 600 }}>{fabric.name}</span>
-      </header>
+    <div style={{ minHeight: '100vh', background: 'var(--color-paper)' }}>
+      <BackHeader title={fabric.name} href="/" />
       <FabricDetail fabric={fabric} />
     </div>
   )
