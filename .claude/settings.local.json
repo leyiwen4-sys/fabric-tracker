@@ -78,7 +78,8 @@
       "Bash(Get-ChildItem -Name -File)",
       "Bash(Select-Object -First 30)",
       "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 30)",
-      "PowerShell(npx next build 2>&1 | Select-Object -First 30)"
+      "PowerShell(npx next build 2>&1 | Select-Object -First 30)",
+      "Bash(nslookup *)"
     ]
   }
 }

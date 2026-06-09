@@ -69,7 +69,7 @@ export default function RegisterPage() {
       <div className={styles.container}>
         {/* 顶部：标题 */}
         <header className={styles.header}>
-          <Title size="middle">获取上岛身份</Title>
+          <Title size="small">获取上岛身份</Title>
         </header>
 
       <div className={styles.formArea}>

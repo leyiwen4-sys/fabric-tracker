@@ -39,7 +39,7 @@ export default async function HomePage({
       >
         <StatsButton />
 
-        <Title size="middle" color="app-pink">我的布记岛</Title>
+        <Title size="small" color="app-pink">我的布记岛</Title>
 
         <LogoutButton />
       </header>

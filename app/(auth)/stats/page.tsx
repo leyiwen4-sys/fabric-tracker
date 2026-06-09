@@ -50,7 +50,7 @@ export default async function StatsPage() {
         <div style={{ position: 'absolute', left: 16 }}>
           <BackButton href="/" />
         </div>
-        <Title size="middle" color="app-yellow">布记岛统计处</Title>
+        <Title size="small" color="app-yellow">布记岛统计处</Title>
       </header>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', minHeight: 0 }}>

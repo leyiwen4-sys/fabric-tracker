@@ -22,7 +22,7 @@ export default function BackHeader({ title, href }: Props) {
       <div style={{ position: 'absolute', left: 16 }}>
         <BackButton href={href || '/'} />
       </div>
-      <Title size="middle" color="app-red">{title}</Title>
+      <Title size="small" color="app-red">{title}</Title>
     </header>
   )
 }
