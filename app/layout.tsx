@@ -5,7 +5,7 @@ import ToastContainer from '@/components/Toast'
 import { Cursor } from 'animal-island-ui'
 
 export const metadata: Metadata = {
-  title: '我的布料收藏',
+  title: '布记岛',
   description: '记录和管理购买的布料',
 }
 
