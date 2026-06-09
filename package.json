@@ -12,9 +12,9 @@
     "seed": "node scripts/seed-test-data.mjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.4.0",
     "animal-island-ui": "^0.9.8",
     "bcryptjs": "^3.0.3",
-    "cos-nodejs-sdk-v5": "^2.15.4",
     "jose": "^6.2.3",
     "next": "16.2.7",
     "react": "19.2.4",
