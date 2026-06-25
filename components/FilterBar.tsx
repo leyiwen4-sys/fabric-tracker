@@ -4,17 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { Input, Select, Button } from 'animal-island-ui'
 
-const TYPE_OPTIONS = [
-  { key: '', label: '全部类型' },
-  { key: '棉', label: '棉' },
-  { key: '麻', label: '麻' },
-  { key: '丝', label: '丝' },
-  { key: '毛', label: '毛' },
-  { key: '化纤', label: '化纤' },
-  { key: '混纺', label: '混纺' },
-  { key: '其他', label: '其他' },
-]
-
 const STATUS_OPTIONS = [
   { key: '', label: '全部状态' },
   { key: 'idle', label: '闲置中~' },
@@ -42,6 +31,23 @@ export default function FilterBar() {
   const [status, setStatus] = useState(searchParams.get('status') || '')
   const [sort, setSort] = useState(searchParams.get('sort') || 'created_at_desc')
   const [openPanel, setOpenPanel] = useState<'filter' | 'sort' | null>(null)
+  const [typeOptions, setTypeOptions] = useState<{ key: string; label: string }[]>([{ key: '', label: '全部类型' }])
+
+  // 从 stats API 获取用户实际使用的布料类型
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(json => {
+        if (json.success && json.data?.byType) {
+          const types: string[] = json.data.byType.map((t: { type: string }) => t.type)
+          setTypeOptions([
+            { key: '', label: '全部类型' },
+            ...types.map(t => ({ key: t, label: t })),
+          ])
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // 外部 URL 变更时同步
   useEffect(() => {
@@ -86,7 +92,7 @@ export default function FilterBar() {
 
   // 激活摘要
   const activeParts: string[] = []
-  if (type) activeParts.push(TYPE_OPTIONS.find(o => o.key === type)?.label || type)
+  if (type) activeParts.push(typeOptions.find(o => o.key === type)?.label || type)
   if (status) activeParts.push(STATUS_OPTIONS.find(o => o.key === status)?.label || status)
   if (sort !== 'created_at_desc') activeParts.push(SORT_OPTIONS.find(o => o.key === sort)?.label || sort)
   const hasActive = type || status || sort !== 'created_at_desc'
@@ -109,7 +115,7 @@ export default function FilterBar() {
           type={openPanel === 'filter' ? 'primary' : 'default'}
           onClick={() => setOpenPanel(openPanel === 'filter' ? null : 'filter')}
         >
-          📋 筛选{hasActive && type || status ? ' ·' : ''}
+          📋 筛选{(type || status) ? ' ·' : ''}
         </Button>
         <Button
           size="small"
@@ -124,7 +130,7 @@ export default function FilterBar() {
       {openPanel === 'filter' && (
         <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
           <div style={{ flex: 1 }}>
-            <Select value={type} onChange={handleTypeChange} options={TYPE_OPTIONS} />
+            <Select value={type} onChange={handleTypeChange} options={typeOptions} />
           </div>
           <div style={{ flex: 1 }}>
             <Select value={status} onChange={handleStatusChange} options={STATUS_OPTIONS} />
