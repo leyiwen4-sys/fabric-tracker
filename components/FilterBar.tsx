@@ -2,8 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
-import { Input, Select, Tabs } from 'animal-island-ui'
-import type { TabItem } from 'animal-island-ui'
+import { Input, Select, Button } from 'animal-island-ui'
 
 const TYPE_OPTIONS = [
   { key: '', label: '全部类型' },
@@ -42,8 +41,9 @@ export default function FilterBar() {
   const [type, setType] = useState(searchParams.get('type') || '')
   const [status, setStatus] = useState(searchParams.get('status') || '')
   const [sort, setSort] = useState(searchParams.get('sort') || 'created_at_desc')
+  const [openPanel, setOpenPanel] = useState<'filter' | 'sort' | null>(null)
 
-  // 外部 URL 变更时同步状态（浏览器前进/后退）
+  // 外部 URL 变更时同步
   useEffect(() => {
     setSearch(searchParams.get('search') || '')
     setType(searchParams.get('type') || '')
@@ -51,7 +51,6 @@ export default function FilterBar() {
     setSort(searchParams.get('sort') || 'created_at_desc')
   }, [searchParams])
 
-  // 将更新写入 URL（用 ref 读取最新 searchParams，避免闭包过期）
   function applyParams(updates: Record<string, string | undefined>) {
     const params = new URLSearchParams(searchParamsRef.current.toString())
     for (const [key, value] of Object.entries(updates)) {
@@ -72,7 +71,6 @@ export default function FilterBar() {
     return () => clearTimeout(timeout)
   }, [search])
 
-  // 筛选/排序：立即更新
   const handleTypeChange = (v: string) => {
     setType(v)
     applyParams({ type: v || undefined })
@@ -86,33 +84,45 @@ export default function FilterBar() {
     applyParams({ sort: v === 'created_at_desc' ? undefined : v })
   }
 
-  // 当前筛选摘要
-  const activeFilters: string[] = []
-  if (type) activeFilters.push(TYPE_OPTIONS.find(o => o.key === type)?.label || type)
-  if (status) activeFilters.push(STATUS_OPTIONS.find(o => o.key === status)?.label || status)
-  if (sort !== 'created_at_desc') activeFilters.push(SORT_OPTIONS.find(o => o.key === sort)?.label || sort)
+  // 激活摘要
+  const activeParts: string[] = []
+  if (type) activeParts.push(TYPE_OPTIONS.find(o => o.key === type)?.label || type)
+  if (status) activeParts.push(STATUS_OPTIONS.find(o => o.key === status)?.label || status)
+  if (sort !== 'created_at_desc') activeParts.push(SORT_OPTIONS.find(o => o.key === sort)?.label || sort)
+  const hasActive = type || status || sort !== 'created_at_desc'
 
-  const tabItems: TabItem[] = [
-    {
-      key: 'search',
-      label: '🔍 搜索',
-      children: (
-        <div style={{ padding: '8px 0' }}>
-          <Input
-            placeholder="🔍 搜索布料名称、店铺..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            allowClear
-            shadow
-          />
-        </div>
-      ),
-    },
-    {
-      key: 'filter',
-      label: '📋 筛选',
-      children: (
-        <div style={{ padding: '8px 0', display: 'flex', gap: '8px' }}>
+  return (
+    <div style={{ padding: '8px 12px 4px' }}>
+      {/* 第一行：搜索栏 */}
+      <Input
+        placeholder="🔍 搜索布料名称、店铺..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        allowClear
+        shadow
+      />
+
+      {/* 第二行：筛选 + 排序按钮 */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+        <Button
+          size="small"
+          type={openPanel === 'filter' ? 'primary' : 'default'}
+          onClick={() => setOpenPanel(openPanel === 'filter' ? null : 'filter')}
+        >
+          📋 筛选{hasActive && type || status ? ' ·' : ''}
+        </Button>
+        <Button
+          size="small"
+          type={openPanel === 'sort' ? 'primary' : 'default'}
+          onClick={() => setOpenPanel(openPanel === 'sort' ? null : 'sort')}
+        >
+          📊 排序{sort !== 'created_at_desc' ? ' ·' : ''}
+        </Button>
+      </div>
+
+      {/* 展开面板 */}
+      {openPanel === 'filter' && (
+        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
           <div style={{ flex: 1 }}>
             <Select value={type} onChange={handleTypeChange} options={TYPE_OPTIONS} />
           </div>
@@ -120,32 +130,24 @@ export default function FilterBar() {
             <Select value={status} onChange={handleStatusChange} options={STATUS_OPTIONS} />
           </div>
         </div>
-      ),
-    },
-    {
-      key: 'sort',
-      label: '📊 排序',
-      children: (
-        <div style={{ padding: '8px 0' }}>
+      )}
+      {openPanel === 'sort' && (
+        <div style={{ marginTop: '8px' }}>
           <Select value={sort} onChange={handleSortChange} options={SORT_OPTIONS} />
         </div>
-      ),
-    },
-  ]
+      )}
 
-  return (
-    <div style={{ padding: '0 12px 4px' }}>
-      <Tabs items={tabItems} defaultActiveKey="search" shadow />
-      {activeFilters.length > 0 && (
+      {/* 激活摘要 */}
+      {hasActive && (
         <div
           style={{
-            padding: '0 0 4px',
+            padding: '4px 0 0',
             fontSize: '12px',
             color: 'var(--animal-text-color-secondary)',
             textAlign: 'center',
           }}
         >
-          {activeFilters.join(' · ')}
+          {activeParts.join(' · ')}
         </div>
       )}
     </div>
