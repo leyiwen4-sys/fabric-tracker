@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { verifyToken, getCookieName } from '@/lib/auth'
 import { getAllFabrics } from '@/lib/fabrics'
 import LogoutButton from '@/components/LogoutButton'
-import SearchBar from '@/components/SearchBar'
+import FilterBar from '@/components/FilterBar'
 import { Suspense } from 'react'
 import { Title } from 'animal-island-ui'
 import StatsButton from '@/components/StatsButton'
@@ -48,7 +48,7 @@ export default async function HomePage({
 
       <div style={{ flexShrink: 0 }}>
         <Suspense fallback={null}>
-          <SearchBar />
+          <FilterBar />
         </Suspense>
       </div>
 
