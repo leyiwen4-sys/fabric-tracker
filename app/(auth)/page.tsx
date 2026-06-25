@@ -14,15 +14,17 @@ export const dynamic = 'force-dynamic'
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ search?: string }>
+  searchParams: Promise<{ search?: string; type?: string; status?: string; sort?: string }>
 }) {
   const cookieStore = await cookies()
   const token = cookieStore.get(getCookieName())?.value
   const payload = token ? await verifyToken(token) : null
   const userId = payload?.userId || 0
 
-  const { search } = await searchParams
-  const fabrics = userId ? await getAllFabrics(userId, { search }) : []
+  const { search, type, status, sort } = await searchParams
+  const fabrics = userId
+    ? await getAllFabrics(userId, { search, type, status, sort } as any)
+    : []
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--color-paper)' }}>

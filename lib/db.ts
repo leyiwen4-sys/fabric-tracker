@@ -21,7 +21,7 @@ function getUrl(): string {
 function typedArg(v: unknown): Record<string, unknown> {
   if (v === null || v === undefined) return { type: 'null' }
   if (typeof v === 'number') {
-    return Number.isInteger(v) ? { type: 'integer', value: String(v) } : { type: 'real', value: String(v) }
+    return Number.isInteger(v) ? { type: 'integer', value: String(v) } : { type: 'float', value: v }
   }
   return { type: 'text', value: String(v) }
 }

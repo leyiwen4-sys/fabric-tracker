@@ -79,7 +79,8 @@
       "Bash(Select-Object -First 30)",
       "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 30)",
       "PowerShell(npx next build 2>&1 | Select-Object -First 30)",
-      "Bash(nslookup *)"
+      "Bash(nslookup *)",
+      "PowerShell(if \\(Get-Command vercel -ErrorAction SilentlyContinue\\) { \"Vercel CLI found: $\\(Get-Command vercel | Select-Object -ExpandProperty Source\\)\" } else { \"Vercel CLI not installed\" }; if \\(Test-Path \".vercel\"\\) { Get-ChildItem .vercel } else { \"No .vercel directory\" })"
     ]
   }
 }

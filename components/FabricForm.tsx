@@ -45,6 +45,12 @@ export default function FabricForm({ fabric }: Props) {
   const [name, setName] = useState(fabric?.name || '')
   const [type, setType] = useState(fabric?.type || '')
   const [unit, setUnit] = useState(fabric?.unit || '')
+  // 可选字段 — 用受控方式跟踪，空值不发请求
+  const [width, setWidth] = useState(fabric?.width ? String(fabric.width) : '')
+  const [price, setPrice] = useState(fabric?.price ? String(fabric.price) : '')
+  const [store, setStore] = useState(fabric?.store || '')
+  const [purchaseDate, setPurchaseDate] = useState(fabric?.purchase_date || '')
+  const [notes, setNotes] = useState(fabric?.notes || '')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -97,20 +103,19 @@ export default function FabricForm({ fabric }: Props) {
       return
     }
 
-    const form = e.currentTarget
-    const formData = new FormData(form)
-
-    // 可控字段直接写入 FormData
+    // 构建 FormData — 只包含有实际值的字段
+    const formData = new FormData()
     formData.set('name', name)
     formData.set('type', type)
     formData.set('unit', unit)
     formData.set('status', status)
 
-    // 数值字段：避免 NaN
-    const widthVal = formData.get('width') as string
-    const priceVal = formData.get('price') as string
-    if (widthVal) formData.set('width', String(parseFloat(widthVal) || ''))
-    if (priceVal) formData.set('price', String(parseFloat(priceVal) || ''))
+    // 可选字段：只有非空值才发送
+    if (width.trim()) formData.set('width', String(parseFloat(width) || ''))
+    if (price.trim()) formData.set('price', String(parseFloat(price) || ''))
+    if (store.trim()) formData.set('store', store.trim())
+    if (purchaseDate.trim()) formData.set('purchase_date', purchaseDate)
+    if (notes.trim()) formData.set('notes', notes.trim())
 
     photoItems.forEach((item, i) => {
       if (item.kind === 'existing') {
@@ -233,11 +238,11 @@ export default function FabricForm({ fabric }: Props) {
           <div className={styles.row}>
             <div className={styles.field}>
               <label className={styles.fieldLabel}>-幅宽 (cm)-</label>
-              <Input name="width" type="number" step="0.5" placeholder="145" defaultValue={fabric?.width || ''} size="large" />
+              <Input type="number" step="0.5" placeholder="145" value={width} onChange={(e) => setWidth(e.target.value)} size="large" />
             </div>
             <div className={styles.field}>
               <label className={styles.fieldLabel}>-单价 (元)-</label>
-              <Input name="price" type="number" step="0.01" placeholder="28" defaultValue={fabric?.price || ''} size="large" />
+              <Input type="number" step="0.01" placeholder="28" value={price} onChange={(e) => setPrice(e.target.value)} size="large" />
             </div>
           </div>
 
@@ -252,18 +257,18 @@ export default function FabricForm({ fabric }: Props) {
             </div>
             <div className={styles.field}>
               <label className={styles.fieldLabel}>-购买日期-</label>
-              <Input name="purchase_date" type="date" defaultValue={fabric?.purchase_date || ''} size="large" />
+              <Input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} size="large" />
             </div>
           </div>
 
           <div className={styles.field}>
             <label className={styles.fieldLabel}>-购买店铺-</label>
-            <Input name="store" placeholder="例如：晓港布料市场 2F-38" defaultValue={fabric?.store || ''} size="large" />
+            <Input placeholder="例如：晓港布料市场 2F-38" value={store} onChange={(e) => setStore(e.target.value)} size="large" />
           </div>
 
           <div className={styles.field}>
             <label className={styles.fieldLabel}>-备注-</label>
-            <Input name="notes" placeholder="手感、适合做什么等..." defaultValue={fabric?.notes || ''} size="large" />
+            <Input placeholder="手感、适合做什么等..." value={notes} onChange={(e) => setNotes(e.target.value)} size="large" />
           </div>
         </div>
 
