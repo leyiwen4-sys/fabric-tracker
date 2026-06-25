@@ -22,7 +22,7 @@ export type FabricInput = Omit<Fabric, 'id' | 'created_at' | 'updated_at'>
 
 export async function getAllFabrics(
   userId: number,
-  options?: { type?: string; search?: string; sort?: string }
+  options?: { type?: string; search?: string; sort?: string; status?: string }
 ): Promise<Fabric[]> {
   await ensureSchema()
   let sql = 'SELECT * FROM fabrics WHERE user_id = ?'
@@ -32,13 +32,37 @@ export async function getAllFabrics(
     sql += ' AND type = ?'
     params.push(options.type)
   }
+  if (options?.status) {
+    sql += ' AND status = ?'
+    params.push(options.status)
+  }
   if (options?.search) {
     const q = `%${options.search}%`
     sql += ' AND (name LIKE ? OR store LIKE ? OR notes LIKE ?)'
     params.push(q, q, q)
   }
 
-  sql += ' ORDER BY created_at DESC, id DESC'
+  // 根据 sort 参数拼接 ORDER BY
+  switch (options?.sort) {
+    case 'created_at_asc':
+      sql += ' ORDER BY created_at ASC, id ASC'
+      break
+    case 'purchase_date_desc':
+      sql += ' ORDER BY purchase_date DESC, id DESC'
+      break
+    case 'purchase_date_asc':
+      sql += ' ORDER BY purchase_date ASC, id ASC'
+      break
+    case 'price_desc':
+      sql += ' ORDER BY price DESC, id DESC'
+      break
+    case 'price_asc':
+      sql += ' ORDER BY price ASC, id ASC'
+      break
+    default: // created_at_desc
+      sql += ' ORDER BY created_at DESC, id DESC'
+  }
+
   const result = await execute(sql, params)
   return rowsToObjects<Fabric>(result.columns, result.rows)
 }
