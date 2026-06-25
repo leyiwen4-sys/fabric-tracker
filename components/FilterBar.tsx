@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Input, Select, Tabs } from 'animal-island-ui'
 import type { TabItem } from 'animal-island-ui'
 
@@ -35,32 +35,39 @@ const SORT_OPTIONS = [
 export default function FilterBar() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const searchParamsRef = useRef(searchParams)
+  searchParamsRef.current = searchParams
 
   const [search, setSearch] = useState(searchParams.get('search') || '')
   const [type, setType] = useState(searchParams.get('type') || '')
   const [status, setStatus] = useState(searchParams.get('status') || '')
   const [sort, setSort] = useState(searchParams.get('sort') || 'created_at_desc')
 
-  // 防抖更新 URL（搜索用 300ms 防抖，筛选/排序立即更新）
-  const updateParams = useCallback(
-    (updates: Record<string, string | undefined>) => {
-      const params = new URLSearchParams(searchParams.toString())
-      for (const [key, value] of Object.entries(updates)) {
-        if (value && value !== '') {
-          params.set(key, value)
-        } else {
-          params.delete(key)
-        }
+  // 外部 URL 变更时同步状态（浏览器前进/后退）
+  useEffect(() => {
+    setSearch(searchParams.get('search') || '')
+    setType(searchParams.get('type') || '')
+    setStatus(searchParams.get('status') || '')
+    setSort(searchParams.get('sort') || 'created_at_desc')
+  }, [searchParams])
+
+  // 将更新写入 URL（用 ref 读取最新 searchParams，避免闭包过期）
+  function applyParams(updates: Record<string, string | undefined>) {
+    const params = new URLSearchParams(searchParamsRef.current.toString())
+    for (const [key, value] of Object.entries(updates)) {
+      if (value && value !== '') {
+        params.set(key, value)
+      } else {
+        params.delete(key)
       }
-      router.replace(`/?${params.toString()}`)
-    },
-    [searchParams, router]
-  )
+    }
+    router.replace(`/?${params.toString()}`)
+  }
 
   // 搜索：300ms 防抖
   useEffect(() => {
     const timeout = setTimeout(() => {
-      updateParams({ search: search || undefined })
+      applyParams({ search: search || undefined })
     }, 300)
     return () => clearTimeout(timeout)
   }, [search])
@@ -68,15 +75,15 @@ export default function FilterBar() {
   // 筛选/排序：立即更新
   const handleTypeChange = (v: string) => {
     setType(v)
-    updateParams({ type: v || undefined })
+    applyParams({ type: v || undefined })
   }
   const handleStatusChange = (v: string) => {
     setStatus(v)
-    updateParams({ status: v || undefined })
+    applyParams({ status: v || undefined })
   }
   const handleSortChange = (v: string) => {
     setSort(v)
-    updateParams({ sort: v === 'created_at_desc' ? undefined : v })
+    applyParams({ sort: v === 'created_at_desc' ? undefined : v })
   }
 
   // 当前筛选摘要
