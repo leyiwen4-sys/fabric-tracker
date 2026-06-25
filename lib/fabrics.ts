@@ -47,6 +47,10 @@ export async function getAllFabrics(
     case 'created_at_asc':
       sql += ' ORDER BY created_at ASC, id ASC'
       break
+    case 'created_at_desc':
+    default:
+      sql += ' ORDER BY created_at DESC, id DESC'
+      break
     case 'purchase_date_desc':
       sql += ' ORDER BY purchase_date DESC, id DESC'
       break
@@ -59,8 +63,6 @@ export async function getAllFabrics(
     case 'price_asc':
       sql += ' ORDER BY price ASC, id ASC'
       break
-    default: // created_at_desc
-      sql += ' ORDER BY created_at DESC, id DESC'
   }
 
   const result = await execute(sql, params)
