@@ -34,12 +34,7 @@ export default function FabricList({ fabrics }: { fabrics: Fabric[] }) {
           <FabricCard key={fabric.id} fabric={fabric} />
         ))}
       </div>
-      <div style={{
-        position: 'sticky',
-        bottom: 0,
-        background: 'var(--color-paper)',
-        paddingTop: 8,
-      }}>
+      <div style={{ paddingTop: 8 }}>
         <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </>

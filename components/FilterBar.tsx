@@ -108,12 +108,13 @@ export default function FilterBar() {
         shadow
       />
 
-      {/* 第二行：筛选 + 排序按钮 */}
+      {/* 第二行：筛选 + 排序按钮（居中，等宽 = 搜索栏总宽的一半） */}
       <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
         <Button
           size="small"
           type={openPanel === 'filter' ? 'primary' : 'default'}
           onClick={() => setOpenPanel(openPanel === 'filter' ? null : 'filter')}
+          style={{ flex: 1 }}
         >
           📋 筛选{(type || status) ? ' ·' : ''}
         </Button>
@@ -121,6 +122,7 @@ export default function FilterBar() {
           size="small"
           type={openPanel === 'sort' ? 'primary' : 'default'}
           onClick={() => setOpenPanel(openPanel === 'sort' ? null : 'sort')}
+          style={{ flex: 1 }}
         >
           📊 排序{sort !== 'created_at_desc' ? ' ·' : ''}
         </Button>
