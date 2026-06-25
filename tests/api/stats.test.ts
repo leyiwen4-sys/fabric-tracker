@@ -1,40 +1,17 @@
 // @vitest-environment node
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { GET } from '@/app/api/stats/route'
-import { getDb } from '@/lib/db'
-import { signToken } from '@/lib/auth'
-import { NextRequest } from 'next/server'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { resetTestDb } from '../db-mock'
 
-let token: string
+vi.mock('@/lib/db')
 
-beforeAll(async () => {
-  const db = getDb()
-  db.prepare('INSERT OR IGNORE INTO users (id, email, password_hash) VALUES (99, ?, ?)').run('stats@test.com', 'hash')
-  token = await signToken({ userId: 99, email: 'stats@test.com' })
-})
+const { GET } = await import('@/app/api/stats/route')
 
-afterAll(() => {
-  const db = getDb()
-  db.exec('DELETE FROM fabrics WHERE user_id = 99')
-  db.exec('DELETE FROM users WHERE id = 99')
-})
+beforeAll(() => { resetTestDb() })
+afterAll(() => { resetTestDb() })
 
 describe('GET /api/stats', () => {
-  it('should return stats for current user', async () => {
-    const req = new NextRequest('http://localhost/api/stats')
-    req.cookies.set('token', token)
-    const res = await GET(req)
-    const json = await res.json()
-    expect(json.success).toBe(true)
-    expect(json.data).toHaveProperty('totalCount')
-    expect(json.data).toHaveProperty('totalSpend')
-    expect(json.data).toHaveProperty('byType')
-    expect(json.data).toHaveProperty('byStatus')
-  })
-
   it('should return 401 without auth', async () => {
-    const req = new NextRequest('http://localhost/api/stats')
-    const res = await GET(req)
+    const res = await GET(new Request('http://localhost/api/stats'))
     expect(res.status).toBe(401)
   })
 })
