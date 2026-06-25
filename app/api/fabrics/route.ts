@@ -12,9 +12,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || undefined
+    const status = searchParams.get('status') || undefined
     const search = searchParams.get('search') || undefined
     const sort = searchParams.get('sort') || 'created_at_desc'
-    const fabrics = await getAllFabrics(userId, { type, search, sort })
+    const fabrics = await getAllFabrics(userId, { type, status, search, sort })
     return NextResponse.json({ success: true, data: fabrics })
   } catch (error) {
     return NextResponse.json(
